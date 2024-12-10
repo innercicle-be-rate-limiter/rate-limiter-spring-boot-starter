@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: ic2RateLimiter
+
+rate-limiter:
+  enabled: true
+  lock-type: redis_redisson
+  rate-type: token_bucket
+  cache-type: redis
+
+
+token-bucket:
+  capacity: 10
+  rate: 1
+  rate-unit: seconds
+  fixed-window-counter:
+    window-size: 60
+    request-limit: 100

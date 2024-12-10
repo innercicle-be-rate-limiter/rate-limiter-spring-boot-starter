@@ -1,1 +1,5 @@
-rootProject.name = 'ic2RateLimiter'
+rootProject.name = 'rate-limiter-spring-boot-starter'
+include 'rate-limiter'
+include 'rate-limiter:token-bucket'
+include 'rate-limiter-spring-boot-autoconfigure'
+

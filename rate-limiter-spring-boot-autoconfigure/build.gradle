@@ -2,11 +2,11 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'maven-publish'
 }
 
 group = 'com.innercicle'
 version = '0.0.1-SNAPSHOT'
+
 
 java {
     toolchain {
@@ -20,15 +20,20 @@ configurations {
     }
 }
 
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
+    implementation 'org.redisson:redisson-spring-boot-starter:3.27.1'
     implementation project(':rate-limiter')
-    implementation project(':rate-limiter-spring-boot-autoconfigure')
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }
