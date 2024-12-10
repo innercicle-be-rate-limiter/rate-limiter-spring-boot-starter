@@ -25,8 +25,8 @@ repositories {
 }
 
 dependencies {
-    implementation project(':rate-limiter')
-    implementation project(':rate-limiter-spring-boot-autoconfigure')
+    compileOnly project(':rate-limiter')
+    compileOnly project(':rate-limiter-spring-boot-autoconfigure')
 }
 
 tasks.named('test') {
