@@ -1,6 +1,8 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'maven-publish'
 }
 
 group = 'com.innercicle'
@@ -24,9 +26,10 @@ repositories {
     mavenCentral()
 }
 
+
 dependencyManagement {
     imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:3.4.0"
+        mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
 }
 
@@ -41,3 +44,28 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.innercicle'
+            artifactId = 'rate-limiter-spring-boot-autoconfigure'
+            version = '0.0.1'
+
+            from components.java
+        }
+    }
+}
+
+springBoot {
+    mainClass.set("") // mainClass를 비워둠
+}
+
+tasks.named('bootJar') {
+    enabled = false
+}
+tasks.named('jar') {
+    enabled = true
+}
+

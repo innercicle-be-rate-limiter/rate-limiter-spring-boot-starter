@@ -15,5 +15,5 @@ repositories {
 
 dependencies {
     compileOnly project(':rate-limiter')
-    implementation project(':rate-limiter-spring-boot-autoconfigure')
+    compileOnly project(':rate-limiter-spring-boot-autoconfigure')
 }
