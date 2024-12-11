@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.innercicle'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 java {
     toolchain {
@@ -48,7 +48,7 @@ publishing {
             groupId = 'com.innercicle'
             artifactId = 'rate-limiter'
             version = '0.0.1'
-            
+
             from components.java
         }
     }
