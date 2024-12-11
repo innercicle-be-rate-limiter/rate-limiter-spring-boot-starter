@@ -24,11 +24,13 @@ configurations {
 repositories {
     mavenCentral()
 }
+
 dependencyManagement {
     imports {
         mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
 }
+
 dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
     implementation 'org.redisson:redisson-spring-boot-starter:3.27.1'
