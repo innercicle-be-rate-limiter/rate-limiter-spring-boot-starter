@@ -33,9 +33,9 @@ public class RateLimiterAutoConfiguration {
     @Bean
     @ConditionalOnBean({RedisConnectionFactory.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate() {
+    public RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, AbstractTokenInfo> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
         redisTemplate.setKeySerializer(RedisSerializer.string());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
@@ -73,16 +73,9 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public RedisProperties redisProperties() {
-        return new RedisProperties();
-    }
-
-    @Bean
     @ConditionalOnBean(RedisProperties.class)
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public RedisConnectionFactory redisConnectionFactory() {
-        RedisProperties redisProperties = redisProperties();
+    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
         return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
     }
 
