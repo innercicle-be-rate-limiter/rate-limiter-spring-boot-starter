@@ -10,6 +10,7 @@ import com.innercicle.handler.TokenBucketHandler;
 import com.innercicle.lock.LockManager;
 import com.innercicle.lock.RedisRedissonManager;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +32,17 @@ public class RateLimiterAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
+    public RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate() {
+        RedisTemplate<String, AbstractTokenInfo> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(RedisSerializer.string());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return redisTemplate;
+    }
+
+    @Bean
+    @ConditionalOnBean({RedisTemplate.class, BucketProperties.class})
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public BucketRedisTemplate bucketRedisTemplate(
         RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate,
         BucketProperties bucketProperties
@@ -45,21 +57,12 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean({BucketRedisTemplate.class, BucketProperties.class})
     public TokenBucketHandler tokenBucketHandler(
         BucketRedisTemplate bucketRedisTemplate,
         BucketProperties bucketProperties
     ) {
         return new TokenBucketHandler(bucketRedisTemplate, bucketProperties);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate() {
-        RedisTemplate<String, AbstractTokenInfo> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
-        redisTemplate.setKeySerializer(RedisSerializer.string());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return redisTemplate;
     }
 
     @Bean
@@ -75,6 +78,7 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(RedisProperties.class)
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public RedisConnectionFactory redisConnectionFactory() {
         RedisProperties redisProperties = redisProperties();
@@ -87,6 +91,7 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean({LockManager.class, TokenBucketHandler.class})
     public RateLimitAop rateLimitAop(RateLimitingProperties rateLimitingProperties,
                                      LockManager lockManager,
                                      RateLimitHandler rateLimitHandler) {
