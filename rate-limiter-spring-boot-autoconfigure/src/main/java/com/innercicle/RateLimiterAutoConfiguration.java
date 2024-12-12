@@ -1,6 +1,5 @@
 package com.innercicle;
 
-import com.innercicle.annotations.RateLimiting;
 import com.innercicle.aop.RateLimitAop;
 import com.innercicle.aop.RateLimitingProperties;
 import com.innercicle.cache.BucketRedisTemplate;
@@ -11,7 +10,6 @@ import com.innercicle.handler.TokenBucketHandler;
 import com.innercicle.lock.LockManager;
 import com.innercicle.lock.RedisRedissonManager;
 import org.redisson.api.RedissonClient;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +21,6 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 @Configuration
-@ConditionalOnClass({RateLimiting.class})
 public class RateLimiterAutoConfiguration {
 
     @Bean
