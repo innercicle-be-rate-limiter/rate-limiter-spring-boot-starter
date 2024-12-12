@@ -31,6 +31,7 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean({RedisConnectionFactory.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate() {
         RedisTemplate<String, AbstractTokenInfo> redisTemplate = new RedisTemplate<>();
