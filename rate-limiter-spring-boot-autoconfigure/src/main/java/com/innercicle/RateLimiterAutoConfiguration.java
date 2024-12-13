@@ -10,8 +10,11 @@ import com.innercicle.handler.TokenBucketHandler;
 import com.innercicle.lock.LockManager;
 import com.innercicle.lock.RedisRedissonManager;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,12 +25,25 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 @Configuration
+@ConditionalOnClass(RedisProperties.class)
+@AutoConfigureBefore(RedisAutoConfiguration.class)
 public class RateLimiterAutoConfiguration {
+
+    @Bean
+    public RateLimitingProperties rateLimitingProperties() {
+        return new RateLimitingProperties();
+    }
 
     @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public BucketProperties bucketProperties() {
         return new BucketProperties(); // 필요한 초기값 설정 가능
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
+    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
+        return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
     }
 
     @Bean
@@ -70,18 +86,6 @@ public class RateLimiterAutoConfiguration {
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
         return new GenericJackson2JsonRedisSerializer();
-    }
-
-    @Bean
-    @ConditionalOnBean(RedisProperties.class)
-    @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
-        return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
-    }
-
-    @Bean
-    public RateLimitingProperties rateLimitingProperties() {
-        return new RateLimitingProperties();
     }
 
     @Bean
