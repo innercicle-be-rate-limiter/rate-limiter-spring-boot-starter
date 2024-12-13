@@ -7,6 +7,7 @@ import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
 import com.innercicle.handler.RateLimitHandler;
 import com.innercicle.handler.TokenBucketHandler;
+import com.innercicle.lock.ConcurrentHashMapManager;
 import com.innercicle.lock.LockManager;
 import com.innercicle.lock.RedisRedissonManager;
 import org.redisson.api.RedissonClient;
@@ -94,6 +95,12 @@ public class RateLimiterAutoConfiguration {
                                      LockManager lockManager,
                                      RateLimitHandler rateLimitHandler) {
         return new RateLimitAop(rateLimitingProperties, lockManager, rateLimitHandler);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "lock-type", havingValue = "concurrent_hash_map")
+    public ConcurrentHashMapManager concurrentHashMapManager() {
+        return new ConcurrentHashMapManager();
     }
 
 }

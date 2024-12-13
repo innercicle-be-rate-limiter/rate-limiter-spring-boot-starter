@@ -11,5 +11,6 @@ public class BucketProperties {
     private int capacity;
     private int rate;
     private RateUnit rateUnit;
+    private FixedWindowCounter fixedWindowCounter;
 
 }
