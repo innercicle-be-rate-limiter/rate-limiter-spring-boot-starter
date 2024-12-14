@@ -1,0 +1,76 @@
+name: rate limiter CI
+on:
+  push:
+    branches:
+      - main
+jobs:
+  dynamic-version-bump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Extract source branch name
+        id: extract_branch
+        run: |
+          # Get the source branch name from the push event
+          BRANCH_NAME=$(git log -1 --pretty=%B | grep -oP '(?<=Merge pull request #\d+ from ).+')
+          echo "Branch name: $BRANCH_NAME"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Determine version bump type
+        id: determine_bump
+        run: |
+          # Default to PATCH if no specific prefix is found
+          VERSION_BUMP="PATCH"
+
+          if [[ "$BRANCH_NAME" =~ ^MAJOR ]]; then
+            VERSION_BUMP="MAJOR"
+          elif [[ "$BRANCH_NAME" =~ ^MINOR ]]; then
+            VERSION_BUMP="MINOR"
+          fi
+
+          echo "Version bump type: $VERSION_BUMP"
+          echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
+
+      - name: Get current version tag
+        id: get_version
+        run: |
+          # Get the latest tag, default to 0.0.0 if no tags exist
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "Current version: $VERSION"
+          echo "CURRENT_VERSION=$VERSION" >> $GITHUB_ENV
+
+          # Parse the version into MAJOR, MINOR, PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION//v/}"
+
+          # Increment based on the bump type
+          case "$VERSION_BUMP" in
+            MAJOR)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            MINOR)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            PATCH)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          # Create new version
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          echo "New version: $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=new_version::$NEW_VERSION"
+
+      - name: Create and push new tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag $NEW_VERSION
+          git push origin $NEW_VERSION
+          echo "Created and pushed new tag: $NEW_VERSION"
