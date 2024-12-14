@@ -5,8 +5,6 @@ import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
 import com.innercicle.domain.LeakyBucketInfo;
 import jakarta.annotation.PreDestroy;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -14,13 +12,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Service
-@ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "leaky_bucket")
 public class LeakyBucketHandler implements RateLimitHandler {
 
     private final Deque<LeakyBucketInfo> deque;
-    private final int leakRate; // 누출 속도
-    private final ScheduledExecutorService scheduler; // 주기적으로 누출을 수행하는 스케줄러
+    private final int leakRate;                         // 누출 속도
+    private final ScheduledExecutorService scheduler;   // 주기적으로 누출을 수행하는 스케줄러
     private final int capacity;
     private final TimeUnit timeUnit;
 

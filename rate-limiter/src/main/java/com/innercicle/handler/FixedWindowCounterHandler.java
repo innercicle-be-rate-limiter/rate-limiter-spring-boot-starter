@@ -5,13 +5,9 @@ import com.innercicle.cache.CacheTemplate;
 import com.innercicle.domain.FixedWindowCountInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "fixed_window_counter")
 public class FixedWindowCounterHandler implements RateLimitHandler {
 
     private final CacheTemplate cacheTemplate;

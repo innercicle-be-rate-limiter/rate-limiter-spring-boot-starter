@@ -3,8 +3,11 @@ package com.innercicle;
 import com.innercicle.aop.RateLimitAop;
 import com.innercicle.aop.RateLimitingProperties;
 import com.innercicle.cache.BucketRedisTemplate;
+import com.innercicle.cache.CacheTemplate;
 import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
+import com.innercicle.handler.FixedWindowCounterHandler;
+import com.innercicle.handler.LeakyBucketHandler;
 import com.innercicle.handler.RateLimitHandler;
 import com.innercicle.handler.TokenBucketHandler;
 import com.innercicle.lock.ConcurrentHashMapManager;
@@ -61,7 +64,7 @@ public class RateLimiterAutoConfiguration {
     @Bean
     @ConditionalOnBean({RedisTemplate.class, BucketProperties.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
-    public BucketRedisTemplate bucketRedisTemplate(
+    public CacheTemplate bucketRedisTemplate(
         RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate,
         BucketProperties bucketProperties
     ) {
@@ -101,6 +104,19 @@ public class RateLimiterAutoConfiguration {
     @ConditionalOnProperty(prefix = "rate-limiter", value = "lock-type", havingValue = "concurrent_hash_map")
     public ConcurrentHashMapManager concurrentHashMapManager() {
         return new ConcurrentHashMapManager();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "leaky_bucket")
+    public RateLimitHandler leakyBucketHandler(BucketProperties bucketProperties) {
+        return new LeakyBucketHandler(bucketProperties);
+    }
+
+    @Bean
+    @ConditionalOnBean(CacheTemplate.class)
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "fixed_window_counter")
+    public RateLimitHandler fixedWindowCounterHandler(CacheTemplate cacheTemplate) {
+        return new FixedWindowCounterHandler(cacheTemplate);
     }
 
 }
