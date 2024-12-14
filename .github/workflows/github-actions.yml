@@ -34,40 +34,47 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
 
-      - name: Get current version tag and calculate next version
-        id: get_version
+      - name: Get current version tag
+        id: get_latest_tag
         run: |
-          # Get all tags and sort them to find the latest tag
+          # Get the latest tag by sorting all tags
           LATEST_TAG=$(git tag --list | sort -V | tail -n 1)
           if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0" # Default if no tags exist
+            LATEST_TAG="v0.0.0" # Default to v0.0.0 if no tags exist
           fi
           echo "Latest tag: $LATEST_TAG"
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
-          # Parse the version into MAJOR, MINOR, PATCH
+      - name: Calculate next version
+        id: calculate_next_version
+        run: |
+          # Parse the latest tag into MAJOR, MINOR, PATCH
           VERSION=${LATEST_TAG//v/}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
           # Increment the version based on the bump type
-          while git rev-parse "v$MAJOR.$MINOR.$PATCH" >/dev/null 2>&1; do
-            case "$VERSION_BUMP" in
-              major)
-                MAJOR=$((MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MINOR=$((MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                PATCH=$((PATCH + 1))
-                ;;
-            esac
+          case "$VERSION_BUMP" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          # Ensure the new tag doesn't already exist
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          while git rev-parse "$NEW_VERSION" >/dev/null 2>&1; do
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
           done
 
-          # Create the next version
-          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
           echo "New version: $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "::set-output name=new_version::$NEW_VERSION"
