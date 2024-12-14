@@ -34,18 +34,21 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
 
-      - name: Get current version tag and bump if exists
+      - name: Get current version tag and calculate next version
         id: get_version
         run: |
-          # Get the latest tag from the repository
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+          # Get all tags and sort them to find the latest tag
+          LATEST_TAG=$(git tag --list | sort -V | tail -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0" # Default if no tags exist
+          fi
           echo "Latest tag: $LATEST_TAG"
 
           # Parse the version into MAJOR, MINOR, PATCH
           VERSION=${LATEST_TAG//v/}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
-          # Increment based on the bump type
+          # Increment the version based on the bump type
           case "$VERSION_BUMP" in
             major)
               MAJOR=$((MAJOR + 1))
@@ -61,7 +64,7 @@ jobs:
               ;;
           esac
 
-          # Create new version
+          # Create the next version
           NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
           echo "New version: $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
