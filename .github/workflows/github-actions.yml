@@ -14,75 +14,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Extract source branch name and determine bump type
-        id: extract_branch_and_bump
+      - name: Extract version from branch name
+        id: extract_branch_version
         run: |
           # Get the branch name from the push event
           BRANCH_NAME=$(git log -1 --pretty=%B | sed -n 's/.*Merge pull request #.* from //p')
-          # Extract the prefix (major, minor, patch) from the branch name
-          VERSION_BUMP=$(echo "$BRANCH_NAME" | awk -F'/' '{print tolower($1)}')
-          # Validate the bump type
-          case "$VERSION_BUMP" in
-            major|minor|patch) 
-              echo "Valid version bump: $VERSION_BUMP";;
-            *)
-              echo "Invalid version bump type. Defaulting to patch."
-              VERSION_BUMP="patch";;
-          esac
           echo "Branch name: $BRANCH_NAME"
-          echo "Version bump type: $VERSION_BUMP"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
 
-      - name: Get current version tag
-        id: get_latest_tag
-        run: |
-          # Get the latest tag by sorting all tags
-          LATEST_TAG=$(git tag --list | sort -V | tail -n 1)
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0" # Default to v0.0.0 if no tags exist
+          # Extract version number from the branch name (e.g., develop/0.0.2 → 0.0.2)
+          if [[ "$BRANCH_NAME" =~ [a-zA-Z]+/([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            VERSION=${BASH_REMATCH[1]}
+            NEW_VERSION="v$VERSION" # Add 'v' prefix
+            echo "Extracted version: $NEW_VERSION"
+            echo "::set-output name=new_version::$NEW_VERSION"
+            echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          else
+            echo "No valid version found in branch name."
+            exit 1
           fi
-          echo "Latest tag: $LATEST_TAG"
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-
-      - name: Calculate next version
-        id: calculate_next_version
-        run: |
-          # Parse the latest tag into MAJOR, MINOR, PATCH
-          VERSION=${LATEST_TAG//v/}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-          # Increment the version based on the bump type
-          case "$VERSION_BUMP" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
-
-          # Ensure the new tag doesn't already exist
-          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-          while git rev-parse "$NEW_VERSION" >/dev/null 2>&1; do
-            PATCH=$((PATCH + 1))
-            NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-          done
-
-          echo "New version: $NEW_VERSION"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          echo "::set-output name=new_version::$NEW_VERSION"
 
       - name: Create and push new tag
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag $NEW_VERSION
           git push origin $NEW_VERSION
           echo "Created and pushed new tag: $NEW_VERSION"
