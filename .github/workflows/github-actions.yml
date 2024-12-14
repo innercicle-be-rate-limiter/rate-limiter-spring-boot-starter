@@ -40,14 +40,18 @@ jobs:
       - name: Get current version tag and bump if exists
         id: get_version
         run: |
-          # Get the latest tag, default to 0.0.0 if no tags exist
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          echo "Current version: $VERSION"
+          # Get all tags and sort them to find the latest tag
+          LATEST_TAG=$(git tag --list | sort -V | tail -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0" # Default if no tags exist
+          fi
+          echo "Latest tag: $LATEST_TAG"
 
           # Parse the version into MAJOR, MINOR, PATCH
-          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION//v/}"
+          VERSION=${LATEST_TAG//v/}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
-          # Check if the tag already exists and increment if needed
+          # Increment based on the bump type
           while git rev-parse "v$MAJOR.$MINOR.$PATCH" >/dev/null 2>&1; do
             case "$VERSION_BUMP" in
               major)
