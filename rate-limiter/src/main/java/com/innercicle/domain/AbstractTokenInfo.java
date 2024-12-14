@@ -1,8 +1,16 @@
 package com.innercicle.domain;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = TokenBucketInfo.class, name = "TokenBucketInfo"),
+    @JsonSubTypes.Type(value = FixedWindowCounter.class, name = "FixedWindowCounter"),
+    @JsonSubTypes.Type(value = LeakyBucketInfo.class, name = "LeakyBucketInfo")
+})
 @Getter
 @NoArgsConstructor
 public class AbstractTokenInfo {
@@ -32,7 +40,6 @@ public class AbstractTokenInfo {
     }
 
     public void endProcess() {
-
     }
 
 }

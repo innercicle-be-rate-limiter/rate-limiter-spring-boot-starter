@@ -26,6 +26,15 @@ public class RateLimitAop {
     private final LockManager lockManager;
     private final RateLimitHandler rateLimitHandler;
 
+    /**
+     * <h2>RateLimiting 어노테이션을 이용한 Rate Limiting 처리</h2>
+     * - RateLimiting 어노테이션이 붙은 메소드에 대한 Rate Limiting 처리 <br/>
+     * - enable/disable 설정에 따라 Rate Limiting 처리 여부 결정 {@link RateLimitingProperties#isEnabled()} <br/>
+     *
+     * @param joinPoint
+     * @return
+     * @throws Throwable
+     */
     @Around("@annotation(com.innercicle.annotations.RateLimiting)")
     public Object rateLimit(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!rateLimitingProperties.isEnabled()) {
@@ -38,28 +47,18 @@ public class RateLimitAop {
             // 어노테이션이 없는 경우 처리하지 않음
             return joinPoint.proceed();
         }
-        String lockKey =
-            method.getName() + CustomSpringELParser.getDynamicValue(signature.getParameterNames(),
-                                                                    joinPoint.getArgs(),
-                                                                    rateLimiting.cacheKey());
-
-        lockManager.getLock(lockKey);
+        String lockKey = getLockAndLockKey(joinPoint, method, signature, rateLimiting);
 
         try {
-            boolean lockable = lockManager.tryLock(rateLimiting);
-            if (!lockable) {
-                log.error("Lock 획득 실패={}", lockKey);
-                throw new LockAcquisitionFailureException("Lock 획득 실패했습니다.");
-            }
-            log.debug("{} lock 시작", this.getClass().getName());
+            tryLock(rateLimiting, lockKey);
+
             String cacheKey = "cache-".concat(lockKey);
 
             AbstractTokenInfo tokenBucketInfo = rateLimitHandler.allowRequest(cacheKey);
 
             Object proceed = joinPoint.proceed();
-            tokenBucketInfo.endProcess();
 
-            setResponseHeader(tokenBucketInfo);
+            doEndProcess(tokenBucketInfo);
 
             return proceed;
         } catch (InterruptedException e) {
@@ -71,7 +70,46 @@ public class RateLimitAop {
         }
     }
 
-    private static void setResponseHeader(AbstractTokenInfo tokenBucketInfo) {
+    private void doEndProcess(AbstractTokenInfo tokenBucketInfo) {
+        tokenBucketInfo.endProcess();
+        setResponseHeader(tokenBucketInfo);
+    }
+
+    private void tryLock(RateLimiting rateLimiting, String lockKey) throws InterruptedException {
+        boolean lockable = lockManager.tryLock(rateLimiting);
+        if (!lockable) {
+            log.error("Lock 획득 실패={}", lockKey);
+            throw new LockAcquisitionFailureException("Lock 획득 실패했습니다.");
+        }
+        log.debug("{} lock 시작", this.getClass().getName());
+    }
+
+    /**
+     * <h2>Lock 획득 및 Lock Key 생성</h2>
+     * - Lock 획득 <br/>
+     * - Lock Key 생성
+     *
+     * @return Lock Key
+     */
+    private String getLockAndLockKey(ProceedingJoinPoint joinPoint, Method method, MethodSignature signature, RateLimiting rateLimiting) {
+        String lockKey =
+            method.getName() + CustomSpringELParser.getDynamicValue(signature.getParameterNames(),
+                                                                    joinPoint.getArgs(),
+                                                                    rateLimiting.cacheKey());
+
+        lockManager.getLock(lockKey);
+        return lockKey;
+    }
+
+    /**
+     * <h2>클라이언트에게 회신할 response 정보 세팅</h2>
+     * - X-Ratelimit-Remaining : 남은 요청 횟수 <br/>
+     * - X-Ratelimit-Limit : 요청 제한 횟수 <br/>
+     * - X-Ratelimit-Retry-After : 다음 요청까지 대기 시간
+     *
+     * @param tokenBucketInfo 토큰 정보
+     */
+    private void setResponseHeader(AbstractTokenInfo tokenBucketInfo) {
         HttpServletResponse response = ((ServletRequestAttributes)(RequestContextHolder.currentRequestAttributes())).getResponse();
         if (response != null) {
             response.setIntHeader("X-Ratelimit-Remaining", tokenBucketInfo.getRemaining());
