@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0' apply false
@@ -29,31 +31,25 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+        mavenBom SpringBootPlugin.BOM_COORDINATES
     }
 }
 
 dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
-    implementation 'org.redisson:redisson-spring-boot-starter:3.27.1'
     implementation project(':rate-limiter')
-    implementation 'org.springframework.boot:spring-boot-starter'
+    // https://mvnrepository.com/artifact/org.redisson/redisson
+    implementation 'org.redisson:redisson:3.40.2'
+    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
+    implementation 'io.lettuce:lettuce-core:6.5.1.RELEASE'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-autoconfigure
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.18.2'
+
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 test {
     useJUnitPlatform()
-}
-
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.innercicle'
-            artifactId = 'rate-limiter-spring-boot-autoconfigure'
-            version = '0.0.1'
-
-            from components.java
-        }
-    }
 }
