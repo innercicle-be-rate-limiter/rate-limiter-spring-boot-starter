@@ -11,13 +11,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Extract source branch name
-        id: extract_branch
+      - name: Extract source branch name and determine bump type
+        id: extract_branch_and_bump
         run: |
-          # Get the source branch name from the push event
-          BRANCH_NAME=$(git log -1 --pretty=%B | grep -oP '(?<=Merge pull request #\d+ from ).+')
+          # Get the branch name from the push event
+          BRANCH_NAME=$(git log -1 --pretty=%B | sed -n 's/.*Merge pull request #.* from //p')
+
+          # Extract the prefix (MAJOR, MINOR, PATCH) from the branch name
+          VERSION_BUMP=$(echo "$BRANCH_NAME" | awk -F'/' '{print $1}')
+
+          # Validate the bump type
+          case "$VERSION_BUMP" in
+            MAJOR|MINOR|PATCH) 
+              echo "Valid version bump: $VERSION_BUMP";;
+            *)
+              echo "Invalid version bump type. Defaulting to PATCH."
+              VERSION_BUMP="PATCH";;
+          esac
+
           echo "Branch name: $BRANCH_NAME"
+          echo "Version bump type: $VERSION_BUMP"
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
 
       - name: Determine version bump type
         id: determine_bump
