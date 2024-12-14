@@ -17,36 +17,21 @@ jobs:
           # Get the branch name from the push event
           BRANCH_NAME=$(git log -1 --pretty=%B | sed -n 's/.*Merge pull request #.* from //p')
 
-          # Extract the prefix (MAJOR, MINOR, PATCH) from the branch name
-          VERSION_BUMP=$(echo "$BRANCH_NAME" | awk -F'/' '{print $1}')
+          # Extract the prefix (major, minor, patch) from the branch name
+          VERSION_BUMP=$(echo "$BRANCH_NAME" | awk -F'/' '{print tolower($1)}')
 
           # Validate the bump type
           case "$VERSION_BUMP" in
-            MAJOR|MINOR|PATCH) 
+            major|minor|patch) 
               echo "Valid version bump: $VERSION_BUMP";;
             *)
-              echo "Invalid version bump type. Defaulting to PATCH."
-              VERSION_BUMP="PATCH";;
+              echo "Invalid version bump type. Defaulting to patch."
+              VERSION_BUMP="patch";;
           esac
 
           echo "Branch name: $BRANCH_NAME"
           echo "Version bump type: $VERSION_BUMP"
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
-
-      - name: Determine version bump type
-        id: determine_bump
-        run: |
-          # Default to PATCH if no specific prefix is found
-          VERSION_BUMP="PATCH"
-
-          if [[ "$BRANCH_NAME" =~ ^MAJOR ]]; then
-            VERSION_BUMP="MAJOR"
-          elif [[ "$BRANCH_NAME" =~ ^MINOR ]]; then
-            VERSION_BUMP="MINOR"
-          fi
-
-          echo "Version bump type: $VERSION_BUMP"
           echo "VERSION_BUMP=$VERSION_BUMP" >> $GITHUB_ENV
 
       - name: Get current version tag
@@ -62,16 +47,16 @@ jobs:
 
           # Increment based on the bump type
           case "$VERSION_BUMP" in
-            MAJOR)
+            major)
               MAJOR=$((MAJOR + 1))
               MINOR=0
               PATCH=0
               ;;
-            MINOR)
+            minor)
               MINOR=$((MINOR + 1))
               PATCH=0
               ;;
-            PATCH)
+            patch)
               PATCH=$((PATCH + 1))
               ;;
           esac
