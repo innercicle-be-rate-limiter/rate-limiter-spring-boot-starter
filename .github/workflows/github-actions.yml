@@ -6,6 +6,9 @@ on:
 jobs:
   dynamic-version-bump:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout repository
