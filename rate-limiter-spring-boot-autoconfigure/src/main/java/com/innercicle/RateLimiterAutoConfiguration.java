@@ -78,22 +78,13 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean({BucketRedisTemplate.class, BucketProperties.class})
-    public TokenBucketHandler tokenBucketHandler(
-        BucketRedisTemplate bucketRedisTemplate,
-        BucketProperties bucketProperties
-    ) {
-        return new TokenBucketHandler(bucketRedisTemplate, bucketProperties);
-    }
-
-    @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "cache-type", havingValue = "redis")
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
         return new GenericJackson2JsonRedisSerializer();
     }
 
     @Bean
-    @ConditionalOnBean({LockManager.class, TokenBucketHandler.class})
+    @ConditionalOnBean({LockManager.class, TokenBucketHandler.class, RateLimitHandler.class})
     public RateLimitAop rateLimitAop(RateLimitingProperties rateLimitingProperties,
                                      LockManager lockManager,
                                      RateLimitHandler rateLimitHandler) {
@@ -107,13 +98,25 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean({BucketRedisTemplate.class, BucketProperties.class})
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "token_bucket")
+
+    public RateLimitHandler tokenBucketHandler(
+        BucketRedisTemplate bucketRedisTemplate,
+        BucketProperties bucketProperties
+    ) {
+        return new TokenBucketHandler(bucketRedisTemplate, bucketProperties);
+    }
+
+    @Bean
+    @ConditionalOnBean({BucketProperties.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "leaky_bucket")
     public RateLimitHandler leakyBucketHandler(BucketProperties bucketProperties) {
         return new LeakyBucketHandler(bucketProperties);
     }
 
     @Bean
-    @ConditionalOnBean(CacheTemplate.class)
+    @ConditionalOnBean({CacheTemplate.class, BucketProperties.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "fixed_window_counter")
     public RateLimitHandler fixedWindowCounterHandler(CacheTemplate cacheTemplate) {
         return new FixedWindowCounterHandler(cacheTemplate);
