@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: test-rate-limiter
+server:
+  port: 9999
+rate-limiter:
+  enabled: true
+  cache-type: redis
+  lock-type: redis_redisson
+  rate-type: leaky_bucket
+token-bucket:
+  capacity: 10
+  rate: 1
+  rate-unit: seconds
+  fixed-window-counter:
+    window-size: 60
+    request-limit: 100
