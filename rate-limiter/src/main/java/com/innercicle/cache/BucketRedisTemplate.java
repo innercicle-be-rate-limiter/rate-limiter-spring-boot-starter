@@ -35,7 +35,6 @@ public class BucketRedisTemplate implements CacheTemplate {
     @Override
     public void save(String key, AbstractTokenInfo tokenInfo) {
         RedisCommands<String, AbstractTokenInfo> syncCommands = connection.sync();
-
         // Lettuce는 기본적으로 만료 시간을 세트할 때 `EX`(초) 또는 `PX`(밀리초) 옵션을 사용
         syncCommands.setex(key, Duration.ofMillis(3_000).toSeconds(), tokenInfo);
     }

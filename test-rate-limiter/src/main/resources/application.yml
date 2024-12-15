@@ -7,7 +7,7 @@ rate-limiter:
   enabled: true
   cache-type: redis
   lock-type: redis_redisson
-  rate-type: leaky_bucket
+  rate-type: token_bucket
 token-bucket:
   capacity: 10
   rate: 1

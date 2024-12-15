@@ -53,3 +53,16 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.innercicle'
+            artifactId = 'rate-limiter-spring-boot-autoconfigure'
+            version = '0.0.1'
+
+            from components.java
+        }
+    }
+}
