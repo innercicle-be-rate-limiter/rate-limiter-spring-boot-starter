@@ -9,10 +9,7 @@ import com.innercicle.cache.BucketRedisTemplate;
 import com.innercicle.cache.CacheTemplate;
 import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
-import com.innercicle.handler.FixedWindowCounterHandler;
-import com.innercicle.handler.LeakyBucketHandler;
-import com.innercicle.handler.RateLimitHandler;
-import com.innercicle.handler.TokenBucketHandler;
+import com.innercicle.handler.*;
 import com.innercicle.lock.ConcurrentHashMapManager;
 import com.innercicle.lock.LockManager;
 import com.innercicle.lock.RedisRedissonManager;
@@ -114,6 +111,12 @@ public class RateLimiterAutoConfiguration {
     public RateLimitHandler fixedWindowCounterHandler(CacheTemplate cacheTemplate) {
         return new FixedWindowCounterHandler(cacheTemplate);
     }
+
+    @Bean
+    @ConditionalOnBean({CacheTemplate.class, BucketProperties.class})
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "sliding_window_logging")
+    public RateLimitHandler slidingWindowLoggingHandler(CacheTemplate cacheTemplate) {
+        return new SlidingWindowLoggingHandler(cacheTemplate);
 
     @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "lock-type", havingValue = "concurrent_hash_map")
