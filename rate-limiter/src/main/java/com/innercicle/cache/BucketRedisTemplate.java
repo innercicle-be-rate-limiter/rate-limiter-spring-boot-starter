@@ -4,10 +4,10 @@ import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
 import com.innercicle.domain.SlidingWindowLoggingInfo;
 import lombok.RequiredArgsConstructor;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -18,13 +18,15 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BucketRedisTemplate implements CacheTemplate {
 
-    private final RedisTemplate<String, AbstractTokenInfo> redisTokenInfoTemplate;
+    private final StatefulRedisConnection<String, AbstractTokenInfo> connection;
     private final BucketProperties bucketProperties;
     public static final String SLIDING_WINDOW_LOGGING_KEY_PREFIX = "sliding_window_logging:";
 
     @Override
     public AbstractTokenInfo getOrDefault(final String key, Class<? extends AbstractTokenInfo> clazz) {
-        return Optional.ofNullable(redisTokenInfoTemplate.opsForValue().get(key))
+        RedisCommands<String, AbstractTokenInfo> syncCommands = connection.sync();
+
+        return Optional.ofNullable(syncCommands.get(key))
             .orElseGet(() -> {
                 try {
                     return clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
@@ -36,7 +38,9 @@ public class BucketRedisTemplate implements CacheTemplate {
 
     @Override
     public void save(String key, AbstractTokenInfo tokenInfo) {
-        redisTokenInfoTemplate.opsForValue().set(key, tokenInfo, Duration.ofMillis(3_000));
+        RedisCommands<String, AbstractTokenInfo> syncCommands = connection.sync();
+        // Lettuce는 기본적으로 만료 시간을 세트할 때 `EX`(초) 또는 `PX`(밀리초) 옵션을 사용
+        syncCommands.setex(key, Duration.ofMillis(3_000).toSeconds(), tokenInfo);
     }
 
     @Override

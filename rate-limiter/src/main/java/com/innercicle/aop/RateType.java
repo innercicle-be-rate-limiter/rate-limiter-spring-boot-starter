@@ -1,5 +1,8 @@
 package com.innercicle.aop;
 
+/**
+ *
+ */
 public enum RateType {
 
     TOKEN_BUCKET,
