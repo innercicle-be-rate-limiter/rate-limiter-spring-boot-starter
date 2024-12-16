@@ -26,16 +26,18 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    // rate-limiter-spring-boot-starter
-    implementation 'com.github.innercicle-be-rate-limiter:rate-limiter-spring-boot-starter:v0.0.5'
+    implementation project(':rate-limiter')
+    implementation project(':rate-limiter-spring-boot-autoconfigure')
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:postgresql'
 }
 
-tasks.test {
+tasks.named('test') {
     useJUnitPlatform()
 }
