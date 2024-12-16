@@ -117,6 +117,7 @@ public class RateLimiterAutoConfiguration {
     @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "sliding_window_logging")
     public RateLimitHandler slidingWindowLoggingHandler(CacheTemplate cacheTemplate) {
         return new SlidingWindowLoggingHandler(cacheTemplate);
+    }
 
     @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "lock-type", havingValue = "concurrent_hash_map")
@@ -129,7 +130,7 @@ public class RateLimiterAutoConfiguration {
     public RateLimitAop rateLimitAop(RateLimitingProperties rateLimitingProperties,
                                      LockManager lockManager,
                                      RateLimitHandler rateLimitHandler) {
-        return new RateLimitAop(rateLimitingProperties, lockManager, rateLimitHandler);
+        return new RateLimitAop(rateLimitingProperties, lockManager, rateLimitHandler); // 메서드 종료
     }
 
     static class AbstractTokenInfoCodec implements RedisCodec<String, AbstractTokenInfo> {
@@ -161,7 +162,6 @@ public class RateLimiterAutoConfiguration {
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             try {
                 return objectMapper.readValue(json, AbstractTokenInfo.class);
-
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
