@@ -26,7 +26,6 @@ public class LeakyBucketHandler implements RateLimitHandler {
     private final Deque<LeakyBucketInfo> deque;
     private final int leakRate;                         // 누출 속도
     private final ScheduledExecutorService scheduler;   // 주기적으로 누출을 수행하는 스케줄러
-    private final int capacity;
     private final TimeUnit timeUnit;
 
     // Leaky Bucket 생성자
