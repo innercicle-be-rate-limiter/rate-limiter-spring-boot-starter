@@ -31,9 +31,8 @@ public class RateLimitAop {
      * - RateLimiting 어노테이션이 붙은 메소드에 대한 Rate Limiting 처리 <br/>
      * - enable/disable 설정에 따라 Rate Limiting 처리 여부 결정 {@link RateLimitingProperties#isEnabled()} <br/>
      *
-     * @param joinPoint
-     * @return
-     * @throws Throwable
+     * @param joinPoint : AspectJ JoinPoint
+     * @return Object : 메소드 실행 결과
      */
     @Around("@annotation(com.innercicle.annotations.RateLimiting)")
     public Object rateLimit(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -58,7 +57,8 @@ public class RateLimitAop {
 
             Object proceed = joinPoint.proceed();
 
-            doEndProcess(tokenBucketInfo);
+            rateLimitHandler.endRequest();
+            setResponseHeader(tokenBucketInfo);
 
             return proceed;
         } catch (InterruptedException e) {
@@ -68,11 +68,6 @@ public class RateLimitAop {
             log.debug("{} lock 해제", this.getClass().getName());
             lockManager.unlock();
         }
-    }
-
-    private void doEndProcess(AbstractTokenInfo tokenBucketInfo) {
-        tokenBucketInfo.endProcess();
-        setResponseHeader(tokenBucketInfo);
     }
 
     private void tryLock(RateLimiting rateLimiting, String lockKey) throws InterruptedException {

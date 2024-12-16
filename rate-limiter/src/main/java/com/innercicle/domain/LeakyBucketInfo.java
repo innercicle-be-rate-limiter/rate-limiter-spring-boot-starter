@@ -26,11 +26,4 @@ public class LeakyBucketInfo extends AbstractTokenInfo {
         return capacity - deque.size();
     }
 
-    @Override
-    public void endProcess() {
-        if (!deque.isEmpty()) {
-            deque.removeLast();
-        }
-    }
-
 }

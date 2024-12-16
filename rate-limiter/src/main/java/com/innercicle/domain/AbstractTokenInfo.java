@@ -39,7 +39,4 @@ public class AbstractTokenInfo {
         return (int)(System.currentTimeMillis() - this.lastRefillTimestamp) / this.rate;
     }
 
-    public void endProcess() {
-    }
-
 }

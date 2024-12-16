@@ -48,7 +48,9 @@ public class LeakyBucketHandler implements RateLimitHandler {
 
     @Override
     public void endRequest() {
-        this.deque.removeLast();
+        if (!deque.isEmpty()) {
+            deque.removeLast();
+        }
     }
 
     private void startLeakTask() {
