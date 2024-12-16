@@ -102,10 +102,10 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean({BucketProperties.class})
+    @ConditionalOnBean({CacheTemplate.class, BucketProperties.class})
     @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "leaky_bucket")
-    public RateLimitHandler leakyBucketHandler(BucketProperties bucketProperties) {
-        return new LeakyBucketHandler(bucketProperties);
+    public RateLimitHandler leakyBucketHandler(CacheTemplate cacheTemplate, BucketProperties bucketProperties) {
+        return new LeakyBucketHandler(cacheTemplate, bucketProperties);
     }
 
     @Bean
