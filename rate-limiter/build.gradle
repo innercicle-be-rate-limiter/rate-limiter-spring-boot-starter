@@ -56,6 +56,18 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 }
 
-test {
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.innercicle'
+            artifactId = 'rate-limiter'
+            version = '0.0.1'
+
+            from components.java
+        }
+    }
+}
+
+tasks.named('test') {
     useJUnitPlatform()
 }
