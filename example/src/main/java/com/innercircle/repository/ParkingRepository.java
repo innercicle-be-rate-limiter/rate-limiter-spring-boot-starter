@@ -1,6 +1,6 @@
 package com.innercircle.repository;
 
-import com.innercicle.testratelimiter.car.entity.CarEntity;
+import com.innercircle.entity.CarEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

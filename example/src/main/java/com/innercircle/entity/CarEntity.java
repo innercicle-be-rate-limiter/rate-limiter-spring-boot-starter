@@ -1,8 +1,7 @@
 package com.innercircle.entity;
 
-import com.innercicle.testratelimiter.car.controller.request.ParkingApplyRequest;
-import com.innercicle.testratelimiter.car.domain.CarInfo;
-import com.innercicle.testratelimiter.car.entity.EntitySequence;
+import com.innercircle.controller.request.ParkingApplyRequest;
+import com.innercircle.domain.CarInfo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -19,7 +18,7 @@ public class CarEntity {
     @Id
     @EntitySequence(name = "id")
     private Long id;
-    
+
     /**
      * 신청자 식별자
      */

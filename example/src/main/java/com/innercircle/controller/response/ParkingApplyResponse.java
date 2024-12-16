@@ -1,6 +1,6 @@
 package com.innercircle.controller.response;
 
-import com.innercicle.testratelimiter.car.entity.CarEntity;
+import com.innercircle.entity.CarEntity;
 import lombok.Getter;
 
 @Getter

@@ -1,8 +1,8 @@
 package com.innercircle.controller;
 
-import com.innercicle.testratelimiter.car.controller.request.ParkingApplyRequest;
-import com.innercicle.testratelimiter.car.controller.response.ParkingApplyResponse;
-import com.innercicle.testratelimiter.car.service.ParkingService;
+import com.innercircle.controller.request.ParkingApplyRequest;
+import com.innercircle.controller.response.ParkingApplyResponse;
+import com.innercircle.service.ParkingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

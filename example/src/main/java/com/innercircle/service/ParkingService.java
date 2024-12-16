@@ -1,10 +1,10 @@
 package com.innercircle.service;
 
 import com.innercicle.annotations.RateLimiting;
-import com.innercicle.testratelimiter.car.controller.request.ParkingApplyRequest;
-import com.innercicle.testratelimiter.car.controller.response.ParkingApplyResponse;
-import com.innercicle.testratelimiter.car.entity.CarEntity;
-import com.innercicle.testratelimiter.car.repository.ParkingRepository;
+import com.innercircle.controller.request.ParkingApplyRequest;
+import com.innercircle.controller.response.ParkingApplyResponse;
+import com.innercircle.entity.CarEntity;
+import com.innercircle.repository.ParkingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
