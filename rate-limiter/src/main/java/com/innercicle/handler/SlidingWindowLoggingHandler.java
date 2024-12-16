@@ -17,7 +17,7 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
 
     @Override
     public SlidingWindowLoggingInfo allowRequest(String key) {
-        SlidingWindowLoggingInfo slidingWindowLoggingInfo = cacheTemplate.getSortedSetOrDefault(key, SlidingWindowLoggingInfo.class);
+        SlidingWindowLoggingInfo slidingWindowLoggingInfo = this.cacheTemplate.getSortedSetOrDefault(key, SlidingWindowLoggingInfo.class);
 
         if (!slidingWindowLoggingInfo.isAvailable()) {
             log.info("허용 범위를 넘어갔습니다.");
@@ -26,9 +26,14 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
                                          slidingWindowLoggingInfo.getLimit(),
                                          slidingWindowLoggingInfo.getRetryAfter());
         }
-
-        cacheTemplate.saveSortedSet(key, slidingWindowLoggingInfo);
+        
+        this.cacheTemplate.saveSortedSet(key, slidingWindowLoggingInfo);
         return slidingWindowLoggingInfo;
+    }
+
+    @Override
+    public void endRequest() {
+        this.cacheTemplate.removeSortedSet();
     }
 
 }

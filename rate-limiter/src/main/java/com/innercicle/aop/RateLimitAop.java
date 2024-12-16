@@ -71,7 +71,8 @@ public class RateLimitAop {
     }
 
     private void doEndProcess(AbstractTokenInfo tokenBucketInfo) {
-        tokenBucketInfo.endProcess();
+        //        tokenBucketInfo.endProcess();
+        rateLimitHandler.endRequest();
         setResponseHeader(tokenBucketInfo);
     }
 
