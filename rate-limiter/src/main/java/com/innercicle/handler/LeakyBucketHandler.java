@@ -34,7 +34,6 @@ public class LeakyBucketHandler implements RateLimitHandler {
         LeakyBucketInfo leakyBucketInfo = (LeakyBucketInfo)cacheTemplate.getOrDefault("deque", LeakyBucketInfo.class);
         this.deque = leakyBucketInfo.getDeque();
         this.scheduler = Executors.newScheduledThreadPool(1);
-        this.capacity = bucketProperties.getCapacity();
         this.leakRate = bucketProperties.getRate();
         this.timeUnit = bucketProperties.getRateUnit().toTimeUnit();
         startLeakTask();
