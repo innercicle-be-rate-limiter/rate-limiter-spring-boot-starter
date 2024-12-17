@@ -60,7 +60,6 @@ class SlidingWindowLoggingTest extends RedisTestContainer {
                     }
                 });
             }
-            latch.await();
         }
         // then
         List<CarEntity> allByCarNoIs = parkingRepository.findAllByCarNoIs(carNo);
