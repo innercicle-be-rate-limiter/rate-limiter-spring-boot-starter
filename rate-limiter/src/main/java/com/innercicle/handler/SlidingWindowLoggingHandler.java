@@ -24,12 +24,12 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
                   slidingWindowLoggingInfo.getLastRefillTimestamp());
         if (slidingWindowLoggingInfo.isUnavailable()) {
             log.info("허용 범위를 넘어갔습니다.");
-            this.cacheTemplate.removeSortedSet(key);
             throw new RateLimitException("You have reached the limit",
                                          slidingWindowLoggingInfo.getRemaining(),
                                          slidingWindowLoggingInfo.getLimit(),
                                          slidingWindowLoggingInfo.getRetryAfter());
         }
+        this.cacheTemplate.removeSortedSet(key);
         this.cacheTemplate.saveSortedSet(key, slidingWindowLoggingInfo);
         return slidingWindowLoggingInfo;
     }

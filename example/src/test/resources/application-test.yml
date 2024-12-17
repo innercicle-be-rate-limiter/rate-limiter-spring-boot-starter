@@ -14,9 +14,12 @@ token-bucket:
   capacity: 10
   rate: 1
   rate-unit: seconds
-  fixed-window-counter:
-    window-size: 60
-    request-limit: 100
+  sliding-window-logging:
+    request-limit: 10
+#  fixed-window-counter:
+#    window-size: 60
+#    request-limit: 10
+
 logging:
   level:
     root: INFO

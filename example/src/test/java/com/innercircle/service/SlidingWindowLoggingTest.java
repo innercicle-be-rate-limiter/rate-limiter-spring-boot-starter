@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     "rate-limiter.lock-type=redis_redisson",
     "rate-limiter.rate-type=sliding_window_logging",
     "rate-limiter.cache-type=REDIS",
+    "token-bucket.sliding-window-logging.request-limit=10"
 })
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class SlidingWindowLoggingTest extends RedisTestContainer {
@@ -42,7 +43,7 @@ class SlidingWindowLoggingTest extends RedisTestContainer {
 
     @Test
     @DisplayName("주차권 저장 테스트")
-    void lateLimitingTest() throws Exception {
+    void lateLimitingTest() {
         // given
         String carNo = "07하3115";
         ParkingApplyRequest parkingApplyRequest = new ParkingApplyRequest("seunggulee", carNo, "20240722", "10", "00");
