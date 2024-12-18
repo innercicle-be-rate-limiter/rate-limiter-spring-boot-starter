@@ -57,14 +57,13 @@ public class BucketRedisTemplate implements CacheTemplate {
         long currentScore = 0;
         long currentTime = Instant.now().toEpochMilli();
         long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
-        long plusTime = currentTime + bucketProperties.getRateUnit().toMillis();
         try {
             List<ScoredValue<AbstractTokenInfo>> scoredValues =
-                commands.zrangebyscoreWithScores(redisKey, minusTime, plusTime);
+                commands.zrangebyscoreWithScores(redisKey, minusTime, currentTime);
             for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
                 log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
                 optionalAbstractTokenInfo = Optional.of(scoredValue.getValue());
-                currentScore = commands.zcount(redisKey, minusTime, plusTime);
+                currentScore = commands.zcount(redisKey, minusTime, currentTime);
                 break;
             }
 
