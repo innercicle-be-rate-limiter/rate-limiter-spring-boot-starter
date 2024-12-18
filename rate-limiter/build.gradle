@@ -73,12 +73,19 @@ test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
 }
-def jacocoDestination = layout.buildDirectory.dir("/reports/jacoco").get().asFile
+
 jacocoTestReport {
-    dependsOn test
+    dependsOn test // tests are required to run before generating the report
     reports {
-        xml.required = true
-        html.required = true
-        html.destination file("$jacocoDestination")
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: ['**/hibernate/**', '**/*$HibernateProxy*'])
+                })
+        )
     }
 }
