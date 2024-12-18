@@ -56,7 +56,7 @@ public class LeakyBucketHandler implements RateLimitHandler {
     }
 
     @Override
-    public void endRequest() {
+    public void endRequest(String cacheKey, AbstractTokenInfo tokenBucketInfo) {
         if (!this.deque.isEmpty()) {
             this.deque.removeLast();
         }

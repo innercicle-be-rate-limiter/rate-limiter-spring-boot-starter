@@ -10,12 +10,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("rate-limiter")
 public class RateLimitingProperties {
 
+    /**
+     * 사용 여부
+     */
     private boolean enabled;
 
-    private LockType lockType;
+    /**
+     * 처리율 유형
+     */
+    private LockType lockType = LockType.REDIS_REDISSON;
 
-    private RateType rateType;
+    /**
+     * 처리율 유형
+     */
+    private RateType rateType = RateType.TOKEN_BUCKET;
 
-    private CacheType cacheType;
+    /**
+     * 캐시 유형
+     */
+    private CacheType cacheType = CacheType.REDIS;
 
 }

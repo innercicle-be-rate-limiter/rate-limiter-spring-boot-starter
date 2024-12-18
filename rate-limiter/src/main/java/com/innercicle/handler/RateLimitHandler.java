@@ -6,7 +6,7 @@ public interface RateLimitHandler {
 
     AbstractTokenInfo allowRequest(String key);
 
-    default void endRequest() {
+    default void endRequest(String cacheKey, AbstractTokenInfo tokenBucketInfo) {
     }
 
 }

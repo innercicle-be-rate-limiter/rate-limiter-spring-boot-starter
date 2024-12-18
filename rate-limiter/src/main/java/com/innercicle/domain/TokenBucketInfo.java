@@ -21,6 +21,10 @@ public class TokenBucketInfo extends AbstractTokenInfo implements Serializable {
         return this.currentTokens > 0;
     }
 
+    public boolean isRejectRequest() {
+        return this.currentTokens <= 0;
+    }
+
     public void minusTokens() {
         this.currentTokens--;
     }

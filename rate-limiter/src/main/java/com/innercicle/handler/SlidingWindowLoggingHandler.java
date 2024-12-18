@@ -2,6 +2,7 @@ package com.innercicle.handler;
 
 import com.innercicle.advice.exceptions.RateLimitException;
 import com.innercicle.cache.CacheTemplate;
+import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.SlidingWindowLoggingInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +30,14 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
                                          slidingWindowLoggingInfo.getLimit(),
                                          slidingWindowLoggingInfo.getRetryAfter());
         }
-        this.cacheTemplate.removeSortedSet(key);
-        this.cacheTemplate.saveSortedSet(key, slidingWindowLoggingInfo);
+
         return slidingWindowLoggingInfo;
+    }
+
+    @Override
+    public void endRequest(String cacheKey, AbstractTokenInfo tokenBucketInfo) {
+        this.cacheTemplate.removeSortedSet(cacheKey);
+        this.cacheTemplate.saveSortedSet(cacheKey, tokenBucketInfo);
     }
 
 }
