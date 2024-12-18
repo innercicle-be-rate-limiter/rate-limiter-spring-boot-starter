@@ -12,10 +12,6 @@ import lombok.Setter;
 public class SlidingWindowLoggingInfo extends AbstractTokenInfo {
 
     /**
-     * 윈도우 크기
-     */
-    private int windowSize;
-    /**
      * 요청 제한 갯수
      */
     private int requestLimit;
@@ -32,6 +28,7 @@ public class SlidingWindowLoggingInfo extends AbstractTokenInfo {
 
     /**
      * 현재 카운트가 요청 제한 갯수보다 크면 안된다.
+     *
      * @return
      */
     public boolean isAvailable() {
