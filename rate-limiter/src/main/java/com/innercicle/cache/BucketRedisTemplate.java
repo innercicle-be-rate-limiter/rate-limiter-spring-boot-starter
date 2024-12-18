@@ -45,6 +45,7 @@ public class BucketRedisTemplate implements CacheTemplate {
 
     /**
      * Sorted Set에서 데이터를 가져오거나 기본값을 반환
+     *
      * @param redisKey
      * @param clazz
      * @return
@@ -54,14 +55,17 @@ public class BucketRedisTemplate implements CacheTemplate {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
         Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
         long currentScore = 0;
-
+        long currentTime = Instant.now().toEpochMilli();
+        long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
+        long plusTime = currentTime + bucketProperties.getRateUnit().toMillis();
         try {
-            List<ScoredValue<AbstractTokenInfo>> scoredValues = commands.zrangebyscoreWithScores(redisKey, 1, Double.MAX_VALUE);
+            List<ScoredValue<AbstractTokenInfo>> scoredValues =
+                commands.zrangebyscoreWithScores(redisKey, minusTime, plusTime);
             for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
                 log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
                 optionalAbstractTokenInfo = Optional.of(scoredValue.getValue());
-                currentScore = commands.zcount(redisKey, 1, Double.MAX_VALUE);
-                break; // 첫 번째 결과만 가져오므로 루프 종료
+                currentScore = commands.zcount(redisKey, minusTime, plusTime);
+                break;
             }
 
             if (optionalAbstractTokenInfo.isPresent()) {
@@ -83,6 +87,7 @@ public class BucketRedisTemplate implements CacheTemplate {
 
     /**
      * Sorted Set에 데이터 저장
+     *
      * @param key
      * @param tokenInfo
      */
@@ -95,12 +100,15 @@ public class BucketRedisTemplate implements CacheTemplate {
 
     /**
      * 처리가 완료 된 애들은 SCORE를 -1로 변경
+     *
      * @param redisKey
      */
     public void removeSortedSet(String redisKey) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-
-        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, 1, Double.MAX_VALUE);
+        long currentTime = Instant.now().toEpochMilli();
+        long minusTime = currentTime - bucketProperties.getRate();
+        long plusTime = currentTime + bucketProperties.getRate();
+        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, plusTime);
         values.stream()
             .findFirst()
             .ifPresent(lowestEntry -> {

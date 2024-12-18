@@ -15,7 +15,6 @@ token-bucket:
   rate: 1
   rate-unit: seconds
   sliding-window-logging:
-    window-size: 60
     request-limit: 10
 #  fixed-window-counter:
 #    window-size: 60
