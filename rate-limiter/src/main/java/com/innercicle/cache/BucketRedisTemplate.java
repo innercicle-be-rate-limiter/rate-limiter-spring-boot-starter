@@ -51,11 +51,11 @@ public class BucketRedisTemplate implements CacheTemplate {
      * @return
      */
     @Override
-    public SlidingWindowLoggingInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
+    public AbstractTokenInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
         Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
         long currentScore = 0;
-        long currentTime = Instant.now().toEpochMilli();
+        long currentTime = System.currentTimeMillis();
         long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
         try {
             List<ScoredValue<AbstractTokenInfo>> scoredValues =
@@ -78,7 +78,7 @@ public class BucketRedisTemplate implements CacheTemplate {
         }
 
         try {
-            return (SlidingWindowLoggingInfo)clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
+            return clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException("Error creating new instance", e);
         }
@@ -101,17 +101,16 @@ public class BucketRedisTemplate implements CacheTemplate {
      * 처리가 완료 된 애들은 SCORE를 -1로 변경
      *
      * @param redisKey
+     * @param tokenBucketInfo
      */
-    public void removeSortedSet(String redisKey) {
+    public void removeSortedSet(String redisKey, AbstractTokenInfo tokenBucketInfo) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long currentTime = Instant.now().toEpochMilli();
-        long minusTime = currentTime - bucketProperties.getRate();
-        long plusTime = currentTime + bucketProperties.getRate();
-        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, plusTime);
+        long minusTime = tokenBucketInfo.getLastRefillTimestamp() - bucketProperties.getRate();
+        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, tokenBucketInfo.getLastRefillTimestamp());
         values.stream()
             .findFirst()
             .ifPresent(lowestEntry -> {
-                log.info("Adding entry with score -1: " + lowestEntry);
+                log.info("Adding entry with score -1: {}", lowestEntry);
                 commands.zadd(redisKey, -1, lowestEntry);
             });
     }

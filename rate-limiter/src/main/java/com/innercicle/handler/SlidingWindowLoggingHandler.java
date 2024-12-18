@@ -37,7 +37,7 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
 
     @Override
     public void endRequest(String cacheKey, AbstractTokenInfo tokenBucketInfo) {
-        this.cacheTemplate.removeSortedSet(cacheKey);
+        this.cacheTemplate.removeSortedSet(cacheKey, tokenBucketInfo);
         this.cacheTemplate.saveSortedSet(cacheKey, tokenBucketInfo);
     }
 

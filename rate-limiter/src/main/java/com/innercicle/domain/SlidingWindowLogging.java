@@ -11,6 +11,6 @@ public class SlidingWindowLogging {
     /**
      * 요청 제한 갯수
      */
-    private int requestLimit;
+    private int requestLimit = 100;
 
 }
