@@ -2,7 +2,6 @@ package com.innercicle.cache;
 
 import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
-import com.innercicle.domain.SlidingWindowLoggingInfo;
 import io.lettuce.core.ScoredValue;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -53,35 +52,48 @@ public class BucketRedisTemplate implements CacheTemplate {
     @Override
     public AbstractTokenInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
-        long currentScore = 0;
         long currentTime = System.currentTimeMillis();
         long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
-        try {
-            List<ScoredValue<AbstractTokenInfo>> scoredValues =
-                commands.zrangebyscoreWithScores(redisKey, minusTime, currentTime);
-            for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
-                log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
-                optionalAbstractTokenInfo = Optional.of(scoredValue.getValue());
-                currentScore = commands.zcount(redisKey, minusTime, currentTime);
-                break;
-            }
 
-            if (optionalAbstractTokenInfo.isPresent()) {
-                SlidingWindowLoggingInfo result = (SlidingWindowLoggingInfo)optionalAbstractTokenInfo.get();
-                result.setCurrentCount(currentScore);
-                log.info("Current key score: {}", currentScore);
-                return result;
-            }
-        } catch (Exception e) {
-            log.error("Error fetching data from Redis", e);
+        List<ScoredValue<AbstractTokenInfo>> scoredValues =
+            commands.zrangebyscoreWithScores(redisKey, minusTime, currentTime);
+        if (!scoredValues.isEmpty()) {
+            return scoredValues.getFirst().getValue();
         }
-
         try {
             return clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException("Error creating new instance", e);
         }
+    }
+
+    /**
+     * 이동 윈도우 score 조회
+     *
+     * @param redisKey
+     * @return
+     */
+    @Override
+    public long getCurrentScore(String redisKey) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        long currentTime = System.currentTimeMillis();
+        long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
+        return commands.zcount(redisKey, minusTime, currentTime);
+    }
+
+    @Override
+    public long findCountWithinBeforeRange(String key) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        long currentTimeMillis = System.currentTimeMillis();
+        long minusTimeMills = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
+        return commands.zcount(key, minusTimeMills, currentTimeMillis);
+    }
+
+    @Override public long findCountWithinAfterRange(String key) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        long currentTimeMillis = System.currentTimeMillis();
+        long plusTimeMillis = currentTimeMillis + bucketProperties.getRateUnit().toMillis();
+        return commands.zcount(key, plusTimeMillis, currentTimeMillis);
     }
 
     /**
