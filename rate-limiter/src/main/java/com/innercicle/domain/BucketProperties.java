@@ -13,5 +13,6 @@ public class BucketProperties {
     private RateUnit rateUnit = RateUnit.SECONDS;
     private FixedWindowCounter fixedWindowCounter;
     private SlidingWindowLogging slidingWindowLogging;
+    private SlidingWindowCounter slidingWindowCounter;
 
 }
