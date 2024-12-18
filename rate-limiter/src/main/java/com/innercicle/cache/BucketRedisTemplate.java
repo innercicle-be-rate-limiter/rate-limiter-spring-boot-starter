@@ -52,8 +52,6 @@ public class BucketRedisTemplate implements CacheTemplate {
     @Override
     public AbstractTokenInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
-        long currentScore = 0;
         long currentTime = System.currentTimeMillis();
         long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
 

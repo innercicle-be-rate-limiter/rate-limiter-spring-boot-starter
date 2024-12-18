@@ -20,4 +20,10 @@ public interface CacheTemplate {
 
     void removeSortedSet(String key, AbstractTokenInfo tokenBucketInfo);
 
+    long getCurrentScore(String key);
+
+    long findCountWithinBeforeRange(String key);
+
+    long findCountWithinAfterRange(String key);
+
 }
