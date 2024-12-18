@@ -38,6 +38,10 @@ public class FixedWindowCountInfo extends AbstractTokenInfo {
         return this.currentCount < this.requestLimit;
     }
 
+    public boolean isUnavailable() {
+        return !this.isAvailable();
+    }
+
     public void plusCount() {
         this.currentCount++;
     }

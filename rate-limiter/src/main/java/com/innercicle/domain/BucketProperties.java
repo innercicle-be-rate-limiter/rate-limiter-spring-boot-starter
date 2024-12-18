@@ -12,5 +12,6 @@ public class BucketProperties {
     private int rate;
     private RateUnit rateUnit;
     private FixedWindowCounter fixedWindowCounter;
+    private SlidingWindowLogging slidingWindowLogging;
 
 }

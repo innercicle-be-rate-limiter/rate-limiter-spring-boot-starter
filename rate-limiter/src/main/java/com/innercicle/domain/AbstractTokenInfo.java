@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @JsonSubTypes({
     @JsonSubTypes.Type(value = TokenBucketInfo.class, name = "TokenBucketInfo"),
     @JsonSubTypes.Type(value = FixedWindowCounter.class, name = "FixedWindowCounter"),
-    @JsonSubTypes.Type(value = LeakyBucketInfo.class, name = "LeakyBucketInfo")
+    @JsonSubTypes.Type(value = LeakyBucketInfo.class, name = "LeakyBucketInfo"),
+    @JsonSubTypes.Type(value = SlidingWindowLoggingInfo.class, name = "SlidingWindowLoggingInfo")
 })
 @Getter
 @NoArgsConstructor
@@ -36,6 +37,9 @@ public class AbstractTokenInfo {
     }
 
     public int getRetryAfter() {
+        if (this.rate == 0) {
+            this.rate = Integer.MAX_VALUE;
+        }
         return (int)(System.currentTimeMillis() - this.lastRefillTimestamp) / this.rate;
     }
 

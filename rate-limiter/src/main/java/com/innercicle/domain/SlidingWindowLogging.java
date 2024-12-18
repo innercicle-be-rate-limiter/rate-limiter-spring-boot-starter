@@ -1,12 +1,16 @@
 package com.innercicle.domain;
 
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Setter @NoArgsConstructor
+@Getter @Setter
+@ConfigurationProperties("token-bucket.sliding-window-logging")
 public class SlidingWindowLogging {
 
-    private int windowSize;
+    /**
+     * 요청 제한 갯수
+     */
     private int requestLimit;
 
 }

@@ -13,6 +13,6 @@ public interface CacheTemplate {
 
     void saveSortedSet(String key, AbstractTokenInfo tokenInfo);
 
-    void removeSortedSet();
+    void removeSortedSet(String key);
 
 }

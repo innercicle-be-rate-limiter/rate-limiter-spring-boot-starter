@@ -3,6 +3,7 @@ package com.innercicle.cache;
 import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
 import com.innercicle.domain.SlidingWindowLoggingInfo;
+import io.lettuce.core.ScoredValue;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +21,6 @@ public class BucketRedisTemplate implements CacheTemplate {
 
     private final StatefulRedisConnection<String, AbstractTokenInfo> connection;
     private final BucketProperties bucketProperties;
-    public static final String SLIDING_WINDOW_LOGGING_KEY_PREFIX = "sliding_window_logging:";
 
     @Override
     public AbstractTokenInfo getOrDefault(final String key, Class<? extends AbstractTokenInfo> clazz) {
@@ -42,35 +43,78 @@ public class BucketRedisTemplate implements CacheTemplate {
         syncCommands.setex(key, Duration.ofMillis(3_000).toSeconds(), tokenInfo);
     }
 
+    /**
+     * Sorted Set에서 데이터를 가져오거나 기본값을 반환
+     *
+     * @param redisKey
+     * @param clazz
+     * @return
+     */
     @Override
-    public SlidingWindowLoggingInfo getSortedSetOrDefault(String key, Class<? extends AbstractTokenInfo> clazz) {
-        List<AbstractTokenInfo> resultSet = connection.sync().zrangebyscore(SLIDING_WINDOW_LOGGING_KEY_PREFIX + key, 1, Double.MAX_VALUE);
-        return resultSet == null || resultSet.isEmpty() ? createDefaultInstance(clazz) :
-            resultSet.stream().filter(clazz::isInstance).findFirst().map(SlidingWindowLoggingInfo.class::cast).orElse(new SlidingWindowLoggingInfo());
-    }
-
-    public void saveSortedSet(String key, AbstractTokenInfo tokenInfo) {
+    public SlidingWindowLoggingInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        commands.zadd(SLIDING_WINDOW_LOGGING_KEY_PREFIX + key,
-                      commands.zcard(SLIDING_WINDOW_LOGGING_KEY_PREFIX + key) == null ? 1 :
-                          commands.zcard(SLIDING_WINDOW_LOGGING_KEY_PREFIX + key) + 1,
-                      tokenInfo);
-    }
+        Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
+        long currentScore = 0;
+        long currentTime = Instant.now().toEpochMilli();
+        long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
+        long plusTime = currentTime + bucketProperties.getRateUnit().toMillis();
+        try {
+            List<ScoredValue<AbstractTokenInfo>> scoredValues =
+                commands.zrangebyscoreWithScores(redisKey, minusTime, plusTime);
+            for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
+                log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
+                optionalAbstractTokenInfo = Optional.of(scoredValue.getValue());
+                currentScore = commands.zcount(redisKey, minusTime, plusTime);
+                break;
+            }
 
-    public void removeSortedSet() {
-        connection.sync().keys(SLIDING_WINDOW_LOGGING_KEY_PREFIX + "*").forEach(key -> connection.sync().zrangebyscore(key,
-                                                                                                                       1,
-                                                                                                                       Integer.MAX_VALUE).stream().findFirst().ifPresent(
-            lowestEntry -> connection.sync().zadd(key, -1, lowestEntry)));
-    }
+            if (optionalAbstractTokenInfo.isPresent()) {
+                SlidingWindowLoggingInfo result = (SlidingWindowLoggingInfo)optionalAbstractTokenInfo.get();
+                result.setCurrentCount(currentScore);
+                log.info("Current key score: {}", currentScore);
+                return result;
+            }
+        } catch (Exception e) {
+            log.error("Error fetching data from Redis", e);
+        }
 
-    // 기본 인스턴스 생성 (헬퍼 메서드)
-    private SlidingWindowLoggingInfo createDefaultInstance(Class<? extends AbstractTokenInfo> clazz) {
         try {
             return (SlidingWindowLoggingInfo)clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException("Error creating new instance", e);
         }
+    }
+
+    /**
+     * Sorted Set에 데이터 저장
+     *
+     * @param key
+     * @param tokenInfo
+     */
+    public void saveSortedSet(String key, AbstractTokenInfo tokenInfo) {
+        long currentTimestamp = Instant.now().toEpochMilli();
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        log.info("create key : {}", key);
+        commands.zadd(key, currentTimestamp, tokenInfo);
+    }
+
+    /**
+     * 처리가 완료 된 애들은 SCORE를 -1로 변경
+     *
+     * @param redisKey
+     */
+    public void removeSortedSet(String redisKey) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        long currentTime = Instant.now().toEpochMilli();
+        long minusTime = currentTime - bucketProperties.getRate();
+        long plusTime = currentTime + bucketProperties.getRate();
+        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, plusTime);
+        values.stream()
+            .findFirst()
+            .ifPresent(lowestEntry -> {
+                log.info("Adding entry with score -1: " + lowestEntry);
+                commands.zadd(redisKey, -1, lowestEntry);
+            });
     }
 
 }

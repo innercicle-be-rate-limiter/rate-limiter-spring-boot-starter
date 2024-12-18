@@ -15,7 +15,7 @@ public class FixedWindowCounterHandler implements RateLimitHandler {
     @Override
     public FixedWindowCountInfo allowRequest(String key) {
         FixedWindowCountInfo fixedWindowCounterInfo = (FixedWindowCountInfo)cacheTemplate.getOrDefault(key, FixedWindowCountInfo.class);
-        if (!fixedWindowCounterInfo.isAvailable()) {
+        if (fixedWindowCounterInfo.isUnavailable()) {
             log.error("허용되지 않은 요청입니다.");
             throw new RateLimitException("You have reached the limit",
                                          fixedWindowCounterInfo.getRemaining(),
