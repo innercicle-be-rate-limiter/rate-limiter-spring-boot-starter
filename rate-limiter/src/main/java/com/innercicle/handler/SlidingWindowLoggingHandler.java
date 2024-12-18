@@ -18,7 +18,8 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
 
     @Override
     public SlidingWindowLoggingInfo allowRequest(String key) {
-        SlidingWindowLoggingInfo slidingWindowLoggingInfo = this.cacheTemplate.getSortedSetOrDefault(key, SlidingWindowLoggingInfo.class);
+        SlidingWindowLoggingInfo slidingWindowLoggingInfo =
+            (SlidingWindowLoggingInfo)this.cacheTemplate.getSortedSetOrDefault(key, SlidingWindowLoggingInfo.class);
         log.error("capacity :: {}, requestLimit :: {}, currentCount :: {}",
                   slidingWindowLoggingInfo.getCapacity(),
                   slidingWindowLoggingInfo.getRequestLimit(),
