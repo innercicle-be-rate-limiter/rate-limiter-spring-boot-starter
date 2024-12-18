@@ -1,36 +1,33 @@
 package com.innercicle.domain;
 
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Getter;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 
-@Setter @NoArgsConstructor
+@Getter
 public class LeakyBucketInfo extends AbstractTokenInfo {
 
-    private Deque<LeakyBucketInfo> deque;
+    private final Deque<LeakyBucketInfo> deque;
 
-    public static LeakyBucketInfo of(int capacity) {
-        LeakyBucketInfo leakyBucketInfo = new LeakyBucketInfo();
-        leakyBucketInfo.capacity = capacity;
-        return leakyBucketInfo;
+    /**
+     * 큐에서 사용중인 갯수
+     */
+
+    public LeakyBucketInfo(BucketProperties properties) {
+        super(properties);
+        this.deque = new ArrayDeque<>(properties.getCapacity());
     }
 
-    @Override
-    public int getLimit() {
-        return deque.size();
-    }
-
+    /**
+     * <h2>현재 큐에서 사용 가능한 갯수</h2>
+     * 전체 용량에서 현재 사용중인 갯수를 뺀다.<br/>
+     *
+     * @return 사용 가능한 갯수
+     */
     @Override
     public int getRemaining() {
         return capacity - deque.size();
-    }
-
-    @Override
-    public void endProcess() {
-        if (!deque.isEmpty()) {
-            deque.removeLast();
-        }
     }
 
 }
