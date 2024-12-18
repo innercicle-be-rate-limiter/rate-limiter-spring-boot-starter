@@ -43,6 +43,12 @@ public class BucketRedisTemplate implements CacheTemplate {
         syncCommands.setex(key, Duration.ofMillis(3_000).toSeconds(), tokenInfo);
     }
 
+    /**
+     * Sorted Set에서 데이터를 가져오거나 기본값을 반환
+     * @param redisKey
+     * @param clazz
+     * @return
+     */
     @Override
     public SlidingWindowLoggingInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
@@ -50,7 +56,6 @@ public class BucketRedisTemplate implements CacheTemplate {
         long currentScore = 0;
 
         try {
-            // 정확한 키에 대해 바로 zrangebyscoreWithScores 호출
             List<ScoredValue<AbstractTokenInfo>> scoredValues = commands.zrangebyscoreWithScores(redisKey, 1, Double.MAX_VALUE);
             for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
                 log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
@@ -76,6 +81,11 @@ public class BucketRedisTemplate implements CacheTemplate {
         }
     }
 
+    /**
+     * Sorted Set에 데이터 저장
+     * @param key
+     * @param tokenInfo
+     */
     public void saveSortedSet(String key, AbstractTokenInfo tokenInfo) {
         long currentTimestamp = Instant.now().toEpochMilli();
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
@@ -83,6 +93,10 @@ public class BucketRedisTemplate implements CacheTemplate {
         commands.zadd(key, currentTimestamp, tokenInfo);
     }
 
+    /**
+     * 처리가 완료 된 애들은 SCORE를 -1로 변경
+     * @param redisKey
+     */
     public void removeSortedSet(String redisKey) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
 
