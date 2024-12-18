@@ -4,6 +4,9 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 처리율 제한 예외
+ */
 @Getter
 public class RateLimitException extends RuntimeException {
 

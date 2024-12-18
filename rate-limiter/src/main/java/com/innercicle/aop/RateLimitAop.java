@@ -57,7 +57,7 @@ public class RateLimitAop {
 
             Object proceed = joinPoint.proceed();
 
-            rateLimitHandler.endRequest();
+            rateLimitHandler.endRequest(cacheKey, tokenBucketInfo);
             setResponseHeader(tokenBucketInfo);
 
             return proceed;

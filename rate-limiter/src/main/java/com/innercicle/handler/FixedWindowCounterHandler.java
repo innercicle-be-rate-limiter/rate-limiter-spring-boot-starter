@@ -2,6 +2,7 @@ package com.innercicle.handler;
 
 import com.innercicle.advice.exceptions.RateLimitException;
 import com.innercicle.cache.CacheTemplate;
+import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.FixedWindowCountInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +24,13 @@ public class FixedWindowCounterHandler implements RateLimitHandler {
                                          fixedWindowCounterInfo.getRetryAfter());
         }
         fixedWindowCounterInfo.plusCount();
-        cacheTemplate.save(key, fixedWindowCounterInfo);
+
         return fixedWindowCounterInfo;
+    }
+
+    @Override
+    public void endRequest(String cacheKey, AbstractTokenInfo tokenBucketInfo) {
+        cacheTemplate.save(cacheKey, tokenBucketInfo);
     }
 
 }

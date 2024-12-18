@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("token-bucket.fixed-window-counter")
 public class FixedWindowCounter extends AbstractTokenInfo {
 
-    private int windowSize;
-    private int requestLimit;
+    private int windowSize = 60;
+    private int requestLimit = 100;
 
 }
