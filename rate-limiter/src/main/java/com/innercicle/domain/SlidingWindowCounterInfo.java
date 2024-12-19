@@ -27,6 +27,8 @@ public class SlidingWindowCounterInfo extends AbstractTokenInfo {
 
     private long afterFixedWindowCount;
 
+    private long betweenRateCount;
+
     public SlidingWindowCounterInfo(BucketProperties bucketProperties) {
         super(bucketProperties);
         this.requestLimit = bucketProperties.getSlidingWindowLogging().getRequestLimit();
@@ -39,11 +41,19 @@ public class SlidingWindowCounterInfo extends AbstractTokenInfo {
      * @return
      */
     public boolean isAvailable() {
-        return this.currentCount < this.requestLimit;
+        long requestCount = this.afterFixedWindowCount + (this.beforeFixedWindowCount * getCurrentWindowRequest());
+        return this.currentCount < requestCount;
     }
 
     public boolean isUnavailable() {
         return !this.isAvailable();
+    }
+
+    private int getCurrentWindowRequest() {
+        if (this.currentCount == 0) {
+            throw new IllegalArgumentException("전체 갯수는 0일 수 없습니다.");
+        }
+        return (int)((this.currentCount / this.betweenRateCount) * 100);
     }
 
 }
