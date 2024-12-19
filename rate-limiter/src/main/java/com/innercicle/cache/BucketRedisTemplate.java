@@ -138,18 +138,19 @@ public class BucketRedisTemplate implements CacheTemplate {
     /**
      * 처리가 완료 된 애들은 SCORE를 -1로 변경
      *
-     * @param redisKey
+     * @param key
      * @param tokenBucketInfo
      */
-    public void removeSortedSet(String redisKey, AbstractTokenInfo tokenBucketInfo) {
+    @Override
+    public void removeSortedSet(String key, AbstractTokenInfo tokenBucketInfo) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
         long minusTime = tokenBucketInfo.getLastRefillTimestamp() - bucketProperties.getRate();
-        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, tokenBucketInfo.getLastRefillTimestamp());
+        List<AbstractTokenInfo> values = commands.zrangebyscore(key, minusTime, tokenBucketInfo.getLastRefillTimestamp());
         values.stream()
             .findFirst()
             .ifPresent(lowestEntry -> {
                 log.info("Adding entry with score -1: {}", lowestEntry);
-                commands.zadd(redisKey, -1, lowestEntry);
+                commands.zadd(key, -1, lowestEntry);
             });
     }
 
