@@ -1,6 +1,7 @@
 package com.innercircle.service;
 
 import com.innercicle.domain.BucketProperties;
+import com.innercircle.container.RedisTestContainer;
 import com.innercircle.controller.request.ParkingApplyRequest;
 import com.innercircle.entity.CarEntity;
 import com.innercircle.repository.ParkingRepository;
@@ -26,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     "token-bucket.sliding-window-counter.request-limit=10"
 })
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class SlidingWindowCounterTest {
+class SlidingWindowCounterTest extends RedisTestContainer {
 
     @Autowired
     private ParkingService parkingService;
