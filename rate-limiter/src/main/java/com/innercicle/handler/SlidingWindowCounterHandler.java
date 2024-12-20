@@ -20,11 +20,8 @@ public class SlidingWindowCounterHandler implements RateLimitHandler {
     public AbstractTokenInfo allowRequest(String key) {
         long currentTimeMillis = System.currentTimeMillis();
         SlidingWindowCounterInfo slidingWindowCounterInfo =
-            (SlidingWindowCounterInfo)cacheTemplate.getSortedSetOrDefault(key, SlidingWindowCounterInfo.class);
-        slidingWindowCounterInfo.setCurrentCount(this.cacheTemplate.getCurrentScore(key, currentTimeMillis));
-        slidingWindowCounterInfo.setBeforeFixedWindowCount(this.cacheTemplate.findCountWithinBeforeRange(key, currentTimeMillis));
-        slidingWindowCounterInfo.setAfterFixedWindowCount(this.cacheTemplate.findCountWithinAfterRange(key, currentTimeMillis));
-        slidingWindowCounterInfo.setBetweenRateCount(this.cacheTemplate.betweenRateInSlidingWindowCounter(key, currentTimeMillis));
+            (SlidingWindowCounterInfo)cacheTemplate.getSortedSetOrDefault(key, currentTimeMillis, SlidingWindowCounterInfo.class);
+        slidingWindowCounterInfo.setCurrentCount(this.cacheTemplate.getSlidingWindowCount(key, currentTimeMillis));
         log.info("capacity :: {}, requestLimit :: {}, currentCount :: {}",
                  slidingWindowCounterInfo.getCapacity(),
                  slidingWindowCounterInfo.getRequestLimit(),

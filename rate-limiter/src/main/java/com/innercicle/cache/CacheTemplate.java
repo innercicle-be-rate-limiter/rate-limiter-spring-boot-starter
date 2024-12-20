@@ -14,7 +14,7 @@ public interface CacheTemplate {
 
     void save(String key, AbstractTokenInfo tokenInfo);
 
-    AbstractTokenInfo getSortedSetOrDefault(String key, Class<? extends AbstractTokenInfo> clazz);
+    AbstractTokenInfo getSortedSetOrDefault(String key, long currentTimeMillis, Class<? extends AbstractTokenInfo> clazz);
 
     void saveSortedSet(String key, AbstractTokenInfo tokenInfo);
 
@@ -22,10 +22,6 @@ public interface CacheTemplate {
 
     long getCurrentScore(String key, long currentTimeMillis);
 
-    long findCountWithinBeforeRange(String key, long currentTimeMillis);
-
-    long findCountWithinAfterRange(String key, long currentTimeMillis);
-
-    long betweenRateInSlidingWindowCounter(String key, long currentTimeMillis);
+    long getSlidingWindowCount(String key, long currentTimeMillis);
 
 }

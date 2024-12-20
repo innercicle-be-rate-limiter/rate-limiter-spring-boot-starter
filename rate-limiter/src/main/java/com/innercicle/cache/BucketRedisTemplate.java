@@ -46,17 +46,17 @@ public class BucketRedisTemplate implements CacheTemplate {
      * Sorted Set에서 데이터를 가져오거나 기본값을 반환
      *
      * @param redisKey
+     * @param currentTimeMillis
      * @param clazz
      * @return
      */
     @Override
-    public AbstractTokenInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
+    public AbstractTokenInfo getSortedSetOrDefault(String redisKey, long currentTimeMillis, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long currentTime = System.currentTimeMillis();
-        long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
+        long minusTime = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
 
         List<ScoredValue<AbstractTokenInfo>> scoredValues =
-            commands.zrangebyscoreWithScores(redisKey, minusTime, currentTime);
+            commands.zrangebyscoreWithScores(redisKey, minusTime, currentTimeMillis);
         if (!scoredValues.isEmpty()) {
             return scoredValues.getFirst().getValue();
         }
@@ -79,46 +79,6 @@ public class BucketRedisTemplate implements CacheTemplate {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
         long minusTime = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
         return commands.zcount(redisKey, minusTime, currentTimeMillis);
-    }
-
-    /**
-     * 이동 윈도 카운터의 이전 시간의 카운트 값 구하기
-     *
-     * @param key
-     * @param currentTimeMillis
-     * @return
-     */
-    @Override
-    public long findCountWithinBeforeRange(String key, long currentTimeMillis) {
-        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long minusTimeMills =
-            getFixedTimeByMillis(currentTimeMillis, bucketProperties.getRateUnit().toMillis()) - bucketProperties.getRateUnit().toMillis();
-        return commands.zcount(key, minusTimeMills, currentTimeMillis);
-    }
-
-    /**
-     * 이동 윈도 카운터의 이후 시간의 카운트 값 구하기
-     *
-     * @param key
-     * @param currentTimeMillis
-     * @return
-     */
-    @Override
-    public long findCountWithinAfterRange(String key, long currentTimeMillis) {
-        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long plusTimeMillis =
-            getFixedTimeByMillis(currentTimeMillis, bucketProperties.getRateUnit().toMillis()) + bucketProperties.getRateUnit().toMillis();
-        return commands.zcount(key, plusTimeMillis, currentTimeMillis);
-    }
-
-    /**
-     * 이동 윈도와 직전 1분이 겹치는 값 구하기
-     */
-    public long betweenRateInSlidingWindowCounter(String key, long currentTimeMillis) {
-        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long minusTime = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
-        long fixedTimeByMillis = getFixedTimeByMillis(currentTimeMillis, bucketProperties.getRateUnit().toMillis());
-        return commands.zcount(key, minusTime, fixedTimeByMillis);
     }
 
     /**
@@ -154,16 +114,24 @@ public class BucketRedisTemplate implements CacheTemplate {
             });
     }
 
-    /**
-     * 이동 윈도 카운터에서 고정된 시간을 구하기 위한 메소드
-     *
-     * @param currentMillis
-     * @param intervalMillis
-     * @return
-     */
-    private static long getFixedTimeByMillis(long currentMillis, long intervalMillis) {
+    @Override
+    public long getSlidingWindowCount(String key, long currentTimeMillis) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
 
-        return (currentMillis / intervalMillis) * intervalMillis;
+        long currentWindowStart = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
+        long previousWindowStart = currentWindowStart - bucketProperties.getRateUnit().toMillis();
+
+        double overlapRatio = (double)(currentTimeMillis - currentWindowStart) / bucketProperties.getRateUnit().toMillis();
+
+        long currentWindowCount = commands.zcount(key, currentWindowStart, currentTimeMillis);
+        long previousWindowCount = commands.zcount(key, previousWindowStart, currentWindowStart);
+
+        log.info("current currentWindowCount::{}, previousWindowCount::{}, overlapRatio::{}",
+                 currentWindowCount,
+                 previousWindowCount,
+                 overlapRatio);
+
+        return Math.round(currentWindowCount + previousWindowCount * overlapRatio);
     }
 
 }

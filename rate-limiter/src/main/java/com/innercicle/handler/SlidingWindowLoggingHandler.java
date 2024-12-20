@@ -20,7 +20,7 @@ public class SlidingWindowLoggingHandler implements RateLimitHandler {
     public SlidingWindowLoggingInfo allowRequest(String key) {
         long currentTimeMillis = System.currentTimeMillis();
         SlidingWindowLoggingInfo slidingWindowLoggingInfo =
-            (SlidingWindowLoggingInfo)this.cacheTemplate.getSortedSetOrDefault(key, SlidingWindowLoggingInfo.class);
+            (SlidingWindowLoggingInfo)this.cacheTemplate.getSortedSetOrDefault(key, currentTimeMillis, SlidingWindowLoggingInfo.class);
         slidingWindowLoggingInfo.setCurrentCount(this.cacheTemplate.getCurrentScore(key, currentTimeMillis));
         log.info("capacity :: {}, requestLimit :: {}, currentCount :: {}",
                  slidingWindowLoggingInfo.getCapacity(),

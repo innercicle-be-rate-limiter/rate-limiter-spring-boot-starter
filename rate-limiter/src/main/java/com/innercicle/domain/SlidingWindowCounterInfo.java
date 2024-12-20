@@ -41,19 +41,11 @@ public class SlidingWindowCounterInfo extends AbstractTokenInfo {
      * @return
      */
     public boolean isAvailable() {
-        long requestCount = this.afterFixedWindowCount + (this.beforeFixedWindowCount * getCurrentWindowRequest());
-        return this.requestLimit > requestCount;
+        return this.currentCount < this.requestLimit;
     }
 
     public boolean isUnavailable() {
         return !this.isAvailable();
-    }
-
-    private int getCurrentWindowRequest() {
-        if (this.betweenRateCount == 0) {
-            return 0; // 기본값으로 0% 반환
-        }
-        return (int)((this.currentCount / (double)this.betweenRateCount) * 100);
     }
 
 }
