@@ -58,4 +58,4 @@ token-bucket:
 
 - capacity: 토큰에 담길 최대 용량을 설정합니다.
 - rate: 토큰이 생성되는 속도를 설정합니다.
-- rate-unit: rate의 단위를 설정합니다.( seconds, minutes, hours, days )
+- rate-unit: rate의 단위를 설정합니다.( seconds, minute, hours, days )
