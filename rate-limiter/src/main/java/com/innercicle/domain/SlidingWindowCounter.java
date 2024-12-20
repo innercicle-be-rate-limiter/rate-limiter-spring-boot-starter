@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter @Setter
 @ConfigurationProperties("token-bucket.sliding-window-counter")
-public class SlidingWindowCounter {
+public class SlidingWindowCounter extends AbstractTokenInfo {
 
     private int requestLimit = 100;
 

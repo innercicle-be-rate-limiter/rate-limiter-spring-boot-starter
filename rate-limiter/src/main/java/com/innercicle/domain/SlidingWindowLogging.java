@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter @Setter
 @ConfigurationProperties("token-bucket.sliding-window-logging")
-public class SlidingWindowLogging {
+public class SlidingWindowLogging extends AbstractTokenInfo {
 
     /**
      * 요청 제한 갯수
