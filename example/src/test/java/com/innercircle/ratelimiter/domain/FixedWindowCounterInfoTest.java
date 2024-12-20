@@ -1,8 +1,6 @@
 package com.innercircle.ratelimiter.domain;
 
-import com.innercicle.domain.BucketProperties;
-import com.innercicle.domain.SlidingWindowCounterInfo;
-import com.innercicle.domain.SlidingWindowLogging;
+import com.innercicle.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 이동 윈도우 카운터 properties 설정
  */
-class SlidingWindowCounterInfoTest {
+class FixedWindowCounterInfoTest {
 
     private BucketProperties bucketProperties;
 
@@ -24,7 +22,7 @@ class SlidingWindowCounterInfoTest {
     @Test
     void testConstructor() {
         // given
-        SlidingWindowCounterInfo info = new SlidingWindowCounterInfo(bucketProperties);
+        FixedWindowCountInfo info = new FixedWindowCountInfo(bucketProperties);
 
         // then
         assertThat(info.getRequestLimit()).isEqualTo(10);
@@ -34,7 +32,7 @@ class SlidingWindowCounterInfoTest {
     @Test
     void testIsAvailable() {
         // given
-        SlidingWindowCounterInfo info = new SlidingWindowCounterInfo(bucketProperties);
+        FixedWindowCountInfo info = new FixedWindowCountInfo(bucketProperties);
 
         // when
         info.setCurrentCount(5);
@@ -52,7 +50,7 @@ class SlidingWindowCounterInfoTest {
     @Test
     void testIsUnavailable() {
         // given
-        SlidingWindowCounterInfo info = new SlidingWindowCounterInfo(bucketProperties);
+        FixedWindowCountInfo info = new FixedWindowCountInfo(bucketProperties);
 
         // when
         info.setCurrentCount(10);
@@ -64,9 +62,9 @@ class SlidingWindowCounterInfoTest {
     static class DummyBucketProperties extends BucketProperties {
 
         public DummyBucketProperties() {
-            SlidingWindowLogging slidingWindowLogging = new SlidingWindowLogging();
-            slidingWindowLogging.setRequestLimit(10);
-            setSlidingWindowLogging(slidingWindowLogging);
+            FixedWindowCounter fixedWindowCounter = new FixedWindowCounter();
+            fixedWindowCounter.setRequestLimit(10);
+            setFixedWindowCounter(fixedWindowCounter);
         }
 
     }
