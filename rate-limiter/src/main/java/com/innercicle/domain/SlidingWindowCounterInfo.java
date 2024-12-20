@@ -42,7 +42,7 @@ public class SlidingWindowCounterInfo extends AbstractTokenInfo {
      */
     public boolean isAvailable() {
         long requestCount = this.afterFixedWindowCount + (this.beforeFixedWindowCount * getCurrentWindowRequest());
-        return this.currentCount < requestCount;
+        return this.requestLimit > requestCount;
     }
 
     public boolean isUnavailable() {
@@ -50,10 +50,10 @@ public class SlidingWindowCounterInfo extends AbstractTokenInfo {
     }
 
     private int getCurrentWindowRequest() {
-        if (this.currentCount == 0) {
-            throw new IllegalArgumentException("전체 갯수는 0일 수 없습니다.");
+        if (this.betweenRateCount == 0) {
+            return 0; // 기본값으로 0% 반환
         }
-        return (int)((this.currentCount / this.betweenRateCount) * 100);
+        return (int)((this.currentCount / (double)this.betweenRateCount) * 100);
     }
 
 }
