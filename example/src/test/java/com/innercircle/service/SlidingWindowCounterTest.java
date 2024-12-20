@@ -24,7 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
     "rate-limiter.lock-type=redis_redisson",
     "rate-limiter.rate-type=sliding_window_counter",
     "rate-limiter.cache-type=REDIS",
-    "token-bucket.sliding-window-counter.request-limit=10"
+    "token-bucket.sliding-window-counter.request-limit=10",
+    "token-bucket.rate-unit=minute"
 })
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class SlidingWindowCounterTest extends RedisTestContainer {
@@ -43,9 +44,9 @@ class SlidingWindowCounterTest extends RedisTestContainer {
 
     @Test
     @DisplayName("주차권 저장 테스트")
-    void lateLimitingTest() {
+    void lateLimitingTest() throws Exception {
         // given
-        String carNo = "07하3115";
+        String carNo = "07하3116";
         ParkingApplyRequest parkingApplyRequest = new ParkingApplyRequest("seunggulee", carNo, "20240722", "10", "00");
         int threadCount = 100;
         CountDownLatch latch = new CountDownLatch(threadCount);
@@ -61,6 +62,7 @@ class SlidingWindowCounterTest extends RedisTestContainer {
                     }
                 });
             }
+            latch.await();
         }
         // then
         List<CarEntity> allByCarNoIs = parkingRepository.findAllByCarNoIs(carNo);
