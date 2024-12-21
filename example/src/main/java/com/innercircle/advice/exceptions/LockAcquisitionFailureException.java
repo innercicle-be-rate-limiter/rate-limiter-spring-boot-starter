@@ -1,4 +1,4 @@
-package com.innercicle.advice.exceptions;
+package com.innercircle.advice.exceptions;
 
 /**
  * 락 획득 실패 예외

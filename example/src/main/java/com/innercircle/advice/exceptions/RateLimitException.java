@@ -1,4 +1,4 @@
-package com.innercicle.advice.exceptions;
+package com.innercircle.advice.exceptions;
 
 import lombok.Getter;
 import org.slf4j.Logger;

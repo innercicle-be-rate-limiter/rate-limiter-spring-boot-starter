@@ -1,6 +1,6 @@
-package com.innercicle.advice;
+package com.innercircle.advice;
 
-import com.innercicle.advice.exceptions.RateLimitException;
+import com.innercircle.advice.exceptions.RateLimitException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
