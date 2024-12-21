@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SlidingWindowLoggingInfo extends AbstractTokenInfo {
+public class SlidingWindowCounterInfo extends AbstractTokenInfo {
 
     /**
      * 요청 제한 갯수
@@ -20,7 +20,16 @@ public class SlidingWindowLoggingInfo extends AbstractTokenInfo {
      */
     private long currentCount;
 
-    public SlidingWindowLoggingInfo(BucketProperties bucketProperties) {
+    /**
+     * 고정 윈도우 카운트 (이전)
+     */
+    private long beforeFixedWindowCount;
+
+    private long afterFixedWindowCount;
+
+    private long betweenRateCount;
+
+    public SlidingWindowCounterInfo(BucketProperties bucketProperties) {
         super(bucketProperties);
         this.requestLimit = bucketProperties.getSlidingWindowLogging().getRequestLimit();
         this.currentCount = 0;

@@ -2,7 +2,6 @@ package com.innercicle.cache;
 
 import com.innercicle.domain.AbstractTokenInfo;
 import com.innercicle.domain.BucketProperties;
-import com.innercicle.domain.SlidingWindowLoggingInfo;
 import io.lettuce.core.ScoredValue;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -47,42 +46,39 @@ public class BucketRedisTemplate implements CacheTemplate {
      * Sorted Set에서 데이터를 가져오거나 기본값을 반환
      *
      * @param redisKey
+     * @param currentTimeMillis
      * @param clazz
      * @return
      */
     @Override
-    public SlidingWindowLoggingInfo getSortedSetOrDefault(String redisKey, Class<? extends AbstractTokenInfo> clazz) {
+    public AbstractTokenInfo getSortedSetOrDefault(String redisKey, long currentTimeMillis, Class<? extends AbstractTokenInfo> clazz) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        Optional<AbstractTokenInfo> optionalAbstractTokenInfo = Optional.empty();
-        long currentScore = 0;
-        long currentTime = Instant.now().toEpochMilli();
-        long minusTime = currentTime - bucketProperties.getRateUnit().toMillis();
-        long plusTime = currentTime + bucketProperties.getRateUnit().toMillis();
-        try {
-            List<ScoredValue<AbstractTokenInfo>> scoredValues =
-                commands.zrangebyscoreWithScores(redisKey, minusTime, plusTime);
-            for (ScoredValue<AbstractTokenInfo> scoredValue : scoredValues) {
-                log.info("Value: {}, Score: {}", scoredValue.getValue(), scoredValue.getScore());
-                optionalAbstractTokenInfo = Optional.of(scoredValue.getValue());
-                currentScore = commands.zcount(redisKey, minusTime, plusTime);
-                break;
-            }
+        long minusTime = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
 
-            if (optionalAbstractTokenInfo.isPresent()) {
-                SlidingWindowLoggingInfo result = (SlidingWindowLoggingInfo)optionalAbstractTokenInfo.get();
-                result.setCurrentCount(currentScore);
-                log.info("Current key score: {}", currentScore);
-                return result;
-            }
-        } catch (Exception e) {
-            log.error("Error fetching data from Redis", e);
+        List<ScoredValue<AbstractTokenInfo>> scoredValues =
+            commands.zrangebyscoreWithScores(redisKey, minusTime, currentTimeMillis);
+        if (!scoredValues.isEmpty()) {
+            return scoredValues.getFirst().getValue();
         }
-
         try {
-            return (SlidingWindowLoggingInfo)clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
+            return clazz.getDeclaredConstructor(BucketProperties.class).newInstance(bucketProperties);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException("Error creating new instance", e);
         }
+    }
+
+    /**
+     * 이동 윈도우 score 조회
+     *
+     * @param redisKey
+     * @param currentTimeMillis
+     * @return
+     */
+    @Override
+    public long getCurrentScore(String redisKey, long currentTimeMillis) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+        long minusTime = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
+        return commands.zcount(redisKey, minusTime, currentTimeMillis);
     }
 
     /**
@@ -91,6 +87,7 @@ public class BucketRedisTemplate implements CacheTemplate {
      * @param key
      * @param tokenInfo
      */
+    @Override
     public void saveSortedSet(String key, AbstractTokenInfo tokenInfo) {
         long currentTimestamp = Instant.now().toEpochMilli();
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
@@ -101,20 +98,40 @@ public class BucketRedisTemplate implements CacheTemplate {
     /**
      * 처리가 완료 된 애들은 SCORE를 -1로 변경
      *
-     * @param redisKey
+     * @param key
+     * @param tokenBucketInfo
      */
-    public void removeSortedSet(String redisKey) {
+    @Override
+    public void removeSortedSet(String key, AbstractTokenInfo tokenBucketInfo) {
         RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
-        long currentTime = Instant.now().toEpochMilli();
-        long minusTime = currentTime - bucketProperties.getRate();
-        long plusTime = currentTime + bucketProperties.getRate();
-        List<AbstractTokenInfo> values = commands.zrangebyscore(redisKey, minusTime, plusTime);
+        long minusTime = tokenBucketInfo.getLastRefillTimestamp() - bucketProperties.getRate();
+        List<AbstractTokenInfo> values = commands.zrangebyscore(key, minusTime, tokenBucketInfo.getLastRefillTimestamp());
         values.stream()
             .findFirst()
             .ifPresent(lowestEntry -> {
-                log.info("Adding entry with score -1: " + lowestEntry);
-                commands.zadd(redisKey, -1, lowestEntry);
+                log.info("Adding entry with score -1: {}", lowestEntry);
+                commands.zadd(key, -1, lowestEntry);
             });
+    }
+
+    @Override
+    public long getSlidingWindowCount(String key, long currentTimeMillis) {
+        RedisCommands<String, AbstractTokenInfo> commands = connection.sync();
+
+        long currentWindowStart = currentTimeMillis - bucketProperties.getRateUnit().toMillis();
+        long previousWindowStart = currentWindowStart - bucketProperties.getRateUnit().toMillis();
+
+        double overlapRatio = (double)(currentTimeMillis - currentWindowStart) / bucketProperties.getRateUnit().toMillis();
+
+        long currentWindowCount = commands.zcount(key, currentWindowStart, currentTimeMillis);
+        long previousWindowCount = commands.zcount(key, previousWindowStart, currentWindowStart);
+
+        log.info("current currentWindowCount::{}, previousWindowCount::{}, overlapRatio::{}",
+                 currentWindowCount,
+                 previousWindowCount,
+                 overlapRatio);
+
+        return Math.round(currentWindowCount + previousWindowCount * overlapRatio);
     }
 
 }

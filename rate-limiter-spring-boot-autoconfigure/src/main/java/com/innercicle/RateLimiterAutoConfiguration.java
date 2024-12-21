@@ -120,6 +120,13 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean({CacheTemplate.class, BucketProperties.class})
+    @ConditionalOnProperty(prefix = "rate-limiter", value = "rate-type", havingValue = "sliding_window_counter")
+    public RateLimitHandler slidingWindowCounterHandler(CacheTemplate cacheTemplate) {
+        return new SlidingWindowCounterHandler(cacheTemplate);
+    }
+
+    @Bean
     @ConditionalOnProperty(prefix = "rate-limiter", value = "lock-type", havingValue = "concurrent_hash_map")
     public ConcurrentHashMapManager concurrentHashMapManager() {
         return new ConcurrentHashMapManager();

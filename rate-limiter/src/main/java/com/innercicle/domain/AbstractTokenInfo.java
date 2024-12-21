@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
     @JsonSubTypes.Type(value = TokenBucketInfo.class, name = "TokenBucketInfo"),
     @JsonSubTypes.Type(value = FixedWindowCounter.class, name = "FixedWindowCounter"),
     @JsonSubTypes.Type(value = LeakyBucketInfo.class, name = "LeakyBucketInfo"),
-    @JsonSubTypes.Type(value = SlidingWindowLoggingInfo.class, name = "SlidingWindowLoggingInfo")
+    @JsonSubTypes.Type(value = SlidingWindowLoggingInfo.class, name = "SlidingWindowLoggingInfo"),
+    @JsonSubTypes.Type(value = SlidingWindowCounterInfo.class, name = "SlidingWindowCounterInfo")
 })
 @Getter
 @NoArgsConstructor
