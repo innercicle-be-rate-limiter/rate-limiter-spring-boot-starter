@@ -1,6 +1,5 @@
 rootProject.name = 'rate-limiter-spring-boot-starter'
 include 'rate-limiter'
 include 'rate-limiter-spring-boot-autoconfigure'
-include 'test-rate-limiter'
 include 'example'
 

@@ -38,9 +38,6 @@ public class AbstractTokenInfo {
     }
 
     public int getRetryAfter() {
-        if (this.rate == 0) {
-            this.rate = Integer.MAX_VALUE;
-        }
         return (int)(System.currentTimeMillis() - this.lastRefillTimestamp) / this.rate;
     }
 
