@@ -16,7 +16,7 @@ public class ParkingService {
 
     @RateLimiting(
         name = "rate-limiting-service",
-        cacheKey = "#request.carNo"
+        cacheKey = "#request.userId"
     )
     public ParkingApplyResponse parking(ParkingApplyRequest request) {
         CarEntity savedEntity = parkingRepository.save(CarEntity.from(request));

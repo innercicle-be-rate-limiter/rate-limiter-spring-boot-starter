@@ -31,7 +31,7 @@ public class ExceptionAdvice {
             response.setIntHeader("X-Ratelimit-Limit", e.getLimit());
             response.setIntHeader("X-Ratelimit-Retry-After", e.getRetryAfter());
         }
-        return ResponseEntity.badRequest().body(e.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(e.getMessage());
     }
 
 }
