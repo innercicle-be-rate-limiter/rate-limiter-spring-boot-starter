@@ -381,9 +381,8 @@ public class RateLimiterAutoConfiguration {
 
 ## 프로젝트 링크
 
--   **GitHub**: [https://github.com/your-username/rate-limiter-spring-boot-starter](https://github.com/your-username/rate-limiter-spring-boot-starter)
--   **Demo**: [http://demo.example.com](http://demo.example.com)
--   **Documentation**: [https://your-username.github.io/rate-limiter-spring-boot-starter](https://your-username.github.io/rate-limiter-spring-boot-starter)
+-   **GitHub**: [RateLimiter](https://github.com/innercicle-be-rate-limiter/rate-limiter-spring-boot-starter)
+-   **Documentation**: [RateLimiter Document](https://github.com/innercicle-be-rate-limiter/rate-limiter-spring-boot-starter/tree/main/docs)
 
 ---
 
